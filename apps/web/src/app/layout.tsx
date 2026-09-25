@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="uz">
       <body>
         <SiteHeader />
-        <main className="min-h-[60vh] pb-16 md:pb-0">{children}</main>
+        <main className="min-h-[60vh]">{children}</main>
         <SiteFooter />
       </body>
     </html>

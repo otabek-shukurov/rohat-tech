@@ -23,7 +23,7 @@ export function SiteFooter() {
   if (pathname.startsWith('/admin')) return null;
 
   return (
-    <footer className="border-t border-slate-800 bg-slate-950 text-slate-300">
+    <footer className="border-t border-slate-800 bg-slate-950 pb-16 text-slate-300 md:pb-0">
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-5 md:py-16">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_0.7fr_0.8fr_1fr]">
           <div>
