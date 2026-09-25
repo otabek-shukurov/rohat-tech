@@ -75,13 +75,27 @@ export default function HomePage() {
       <section data-hero-carousel className="relative h-[100svh] min-h-[620px] max-h-[920px] w-full overflow-hidden bg-slate-100 sm:min-h-[680px] lg:min-h-[720px] lg:max-h-none" aria-roledescription="carousel" aria-label="Rohat Tech takliflari">
         {heroSlides.map((slide, index) => (
           <div key={slide.image} className={cn('absolute inset-0 transition-[opacity,transform] duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)]', index === activeSlide ? 'scale-100 opacity-100' : 'pointer-events-none scale-[1.015] opacity-0')} aria-hidden={index !== activeSlide}>
+            <div className="absolute inset-0 overflow-hidden md:hidden">
+              <Image
+                src={slide.image}
+                alt=""
+                fill
+                priority={index === 0}
+                sizes="100vw"
+                className="hero-mobile-backdrop object-cover"
+                style={{ objectPosition: slide.mobilePosition }}
+              />
+              <div className={cn('hero-mobile-stage', index === activeSlide && `hero-media--active ${slide.motion}`)}>
+                <Image src={slide.image} alt="" fill priority={index === 0} sizes="118vw" className="object-contain" />
+              </div>
+            </div>
             <Image
               src={slide.image}
               alt=""
               fill
               priority={index === 0}
               sizes="100vw"
-              className={cn('hero-media object-cover', index === activeSlide && `hero-media--active ${slide.motion}`)}
+              className={cn('hero-media hidden object-cover md:block', index === activeSlide && `hero-media--active ${slide.motion}`)}
               style={{ '--hero-position': slide.position, '--hero-position-mobile': slide.mobilePosition } as CSSProperties}
             />
           </div>
