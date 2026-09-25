@@ -87,24 +87,10 @@ select {
   will-change: transform;
 }
 
-.hero-mobile-backdrop {
-  filter: blur(18px) saturate(0.82) brightness(0.78);
-  opacity: 0.9;
-  transform: scale(1.16);
-}
-
-.hero-mobile-stage {
-  position: absolute;
-  inset: 92px -9% 152px;
-  transform: scale(0.985);
-  will-change: transform;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 13%, #000 87%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 13%, #000 87%, transparent 100%);
-}
-
-.hero-mobile-stage > img {
-  filter: saturate(0.98) contrast(1.02);
+.hero-mobile-media {
   object-position: center;
+  transform: scale(1.01);
+  will-change: transform;
 }
 
 .hero-media--active.hero-media--right {
@@ -115,11 +101,11 @@ select {
   animation: hero-drift-left 7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.hero-mobile-stage.hero-media--active.hero-media--right {
+.hero-mobile-media.hero-media--active.hero-media--right {
   animation: hero-mobile-drift-right 7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.hero-mobile-stage.hero-media--active.hero-media--left {
+.hero-mobile-media.hero-media--active.hero-media--left {
   animation: hero-mobile-drift-left 7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -134,13 +120,13 @@ select {
 }
 
 @keyframes hero-mobile-drift-right {
-  from { transform: scale(0.985) translate3d(-0.35%, 0, 0); }
-  to { transform: scale(1.025) translate3d(0.6%, -0.2%, 0); }
+  from { transform: scale(1.01) translate3d(-0.2%, 0, 0); }
+  to { transform: scale(1.045) translate3d(0.45%, -0.15%, 0); }
 }
 
 @keyframes hero-mobile-drift-left {
-  from { transform: scale(0.985) translate3d(0.35%, 0, 0); }
-  to { transform: scale(1.025) translate3d(-0.6%, -0.2%, 0); }
+  from { transform: scale(1.01) translate3d(0.2%, 0, 0); }
+  to { transform: scale(1.045) translate3d(-0.45%, -0.15%, 0); }
 }
 
 .scroll-reveal {
