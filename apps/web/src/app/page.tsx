@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { type CSSProperties, useEffect, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,10 +25,10 @@ import { demoProducts } from '@/lib/demo-catalog';
 import { cn } from '@/lib/utils';
 
 const heroSlides = [
-  { image: '/images/rohat-tech-hero.png', label: 'Uy uchun to‘liq yechim', title: 'Yangi avlod maishiy texnikasi', position: 'center' },
-  { image: '/images/hero-tv.png', label: 'Katta ekranlar', title: 'Kino kayfiyati endi uyda', position: 'center' },
-  { image: '/images/hero-fridge.png', label: 'Oshxona uchun', title: 'Har kuni yangi va qulay', position: 'center' },
-  { image: '/images/hero-washer.png', label: 'Kundalik yordamchi', title: 'Tozalik kamroq vaqt talab qiladi', position: 'center' }
+  { image: '/images/rohat-tech-hero.png', label: 'Uy uchun to‘liq yechim', title: 'Yangi avlod maishiy texnikasi', position: 'center', mobilePosition: '67% center', motion: 'hero-media--right' },
+  { image: '/images/hero-tv.png', label: 'Katta ekranlar', title: 'Kino kayfiyati endi uyda', position: 'center', mobilePosition: '64% center', motion: 'hero-media--left' },
+  { image: '/images/hero-fridge.png', label: 'Oshxona uchun', title: 'Har kuni yangi va qulay', position: 'center', mobilePosition: '69% center', motion: 'hero-media--right' },
+  { image: '/images/hero-washer.png', label: 'Kundalik yordamchi', title: 'Tozalik kamroq vaqt talab qiladi', position: 'center', mobilePosition: '68% center', motion: 'hero-media--left' }
 ];
 
 const categories = [
@@ -72,10 +72,18 @@ export default function HomePage() {
 
   return (
     <div className="overflow-x-clip bg-white">
-      <section data-hero-carousel className="relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-slate-100 sm:min-h-[680px] lg:min-h-[720px]" aria-roledescription="carousel" aria-label="Rohat Tech takliflari">
+      <section data-hero-carousel className="relative h-[100svh] min-h-[620px] max-h-[920px] w-full overflow-hidden bg-slate-100 sm:min-h-[680px] lg:min-h-[720px] lg:max-h-none" aria-roledescription="carousel" aria-label="Rohat Tech takliflari">
         {heroSlides.map((slide, index) => (
-          <div key={slide.image} className={cn('absolute inset-0 transition-[opacity,transform] duration-700 ease-out', index === activeSlide ? 'scale-100 opacity-100' : 'pointer-events-none scale-[1.02] opacity-0')} aria-hidden={index !== activeSlide}>
-            <Image src={slide.image} alt="" fill priority={index === 0} sizes="100vw" className="object-cover" style={{ objectPosition: slide.position }} />
+          <div key={slide.image} className={cn('absolute inset-0 transition-[opacity,transform] duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)]', index === activeSlide ? 'scale-100 opacity-100' : 'pointer-events-none scale-[1.015] opacity-0')} aria-hidden={index !== activeSlide}>
+            <Image
+              src={slide.image}
+              alt=""
+              fill
+              priority={index === 0}
+              sizes="100vw"
+              className={cn('hero-media object-cover', index === activeSlide && `hero-media--active ${slide.motion}`)}
+              style={{ '--hero-position': slide.position, '--hero-position-mobile': slide.mobilePosition } as CSSProperties}
+            />
           </div>
         ))}
 

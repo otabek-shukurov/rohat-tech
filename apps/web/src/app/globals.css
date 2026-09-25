@@ -81,12 +81,74 @@ select {
   animation-play-state: paused;
 }
 
-.experience-card {
+.hero-media {
+  object-position: var(--hero-position-mobile, center);
+  transform: scale(1.035);
+  will-change: transform;
+}
+
+.hero-media--active.hero-media--right {
+  animation: hero-drift-right 7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-media--active.hero-media--left {
+  animation: hero-drift-left 7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes hero-drift-right {
+  from { transform: scale(1.035) translate3d(-0.5%, 0, 0); }
+  to { transform: scale(1.105) translate3d(0.8%, -0.35%, 0); }
+}
+
+@keyframes hero-drift-left {
+  from { transform: scale(1.035) translate3d(0.5%, 0, 0); }
+  to { transform: scale(1.105) translate3d(-0.8%, -0.35%, 0); }
+}
+
+.scroll-reveal {
+  opacity: 0;
+  filter: blur(7px);
+  transform-origin: 50% 100%;
+  transform-style: preserve-3d;
+  will-change: opacity, transform, filter;
+  transition:
+    opacity 800ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 700ms ease-out;
+}
+
+.scroll-reveal--rise {
+  transform: perspective(1000px) translate3d(0, 42px, 0) rotateX(4deg) scale(0.985);
+}
+
+.scroll-reveal--scale {
+  transform: perspective(1000px) translate3d(0, 38px, -30px) rotateX(7deg) scale(0.94);
+}
+
+.scroll-reveal--left {
+  transform: perspective(1000px) translate3d(-42px, 24px, 0) rotateY(6deg) scale(0.97);
+}
+
+.scroll-reveal--right {
+  transform: perspective(1000px) translate3d(42px, 24px, 0) rotateY(-6deg) scale(0.97);
+}
+
+.scroll-reveal--visible {
+  opacity: 1;
+  filter: blur(0);
+  transform: perspective(1000px) translate3d(0, 0, 0) rotateX(0) rotateY(0) scale(1);
+}
+
+.experience-card-shell {
   --stack-offset: 0px;
 }
 
 @media (min-width: 1024px) {
-  .experience-card {
+  .hero-media {
+    object-position: var(--hero-position, center);
+  }
+
+  .experience-card-shell {
     position: sticky;
     top: calc(168px + var(--stack-offset));
     margin-bottom: 96px;
@@ -96,4 +158,11 @@ select {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .brand-track { animation-play-state: paused; }
+  .hero-media--active { animation: none; }
+  .scroll-reveal {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    transition: none;
+  }
 }

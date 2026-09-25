@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { type CSSProperties } from 'react';
 import { ArrowUpRight, Search, ShieldCheck, Truck } from 'lucide-react';
+import { ScrollReveal } from '@/components/scroll-reveal';
 
 const steps = [
   {
@@ -48,23 +49,25 @@ export function HomeExperience() {
 
         <div>
           {steps.map(({ number, icon: Icon, eyebrow, title, text, image, imagePosition, color }, index) => (
-            <article key={number} className={`experience-card grid min-h-[430px] overflow-hidden rounded-lg border border-slate-200 shadow-[0_18px_60px_rgba(15,23,42,0.10)] lg:grid-cols-[0.88fr_1.12fr] ${color}`} style={{ '--stack-offset': `${index * 14}px` } as CSSProperties}>
-              <div className="flex flex-col justify-between p-6 sm:p-8 lg:p-12">
-                <div className="flex items-center justify-between">
-                  <span className="grid h-11 w-11 place-items-center rounded-md bg-white text-blue-700 shadow-sm"><Icon className="h-5 w-5" /></span>
-                  <span className="text-sm font-semibold text-slate-400">{number} / 03</span>
+            <ScrollReveal key={number} variant="scale" delay={index * 90} className="experience-card-shell" style={{ '--stack-offset': `${index * 14}px` } as CSSProperties}>
+              <article className={`experience-card grid min-h-[430px] overflow-hidden rounded-lg border border-slate-200 shadow-[0_18px_60px_rgba(15,23,42,0.10)] lg:grid-cols-[0.88fr_1.12fr] ${color}`}>
+                <div className="flex flex-col justify-between p-6 sm:p-8 lg:p-12">
+                  <div className="flex items-center justify-between">
+                    <span className="grid h-11 w-11 place-items-center rounded-md bg-white text-blue-700 shadow-sm"><Icon className="h-5 w-5" /></span>
+                    <span className="text-sm font-semibold text-slate-400">{number} / 03</span>
+                  </div>
+                  <div className="mt-14 lg:mt-8">
+                    <p className="text-xs font-semibold uppercase text-blue-700">{eyebrow}</p>
+                    <h3 className="mt-3 max-w-lg text-3xl font-medium leading-tight text-slate-950 md:text-4xl">{title}</h3>
+                    <p className="mt-4 max-w-lg text-sm leading-7 text-slate-600 md:text-base">{text}</p>
+                    <Link href="/catalog" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-950 transition hover:text-blue-700">Katalogni ko‘rish <ArrowUpRight className="h-4 w-4" /></Link>
+                  </div>
                 </div>
-                <div className="mt-14 lg:mt-8">
-                  <p className="text-xs font-semibold uppercase text-blue-700">{eyebrow}</p>
-                  <h3 className="mt-3 max-w-lg text-3xl font-medium leading-tight text-slate-950 md:text-4xl">{title}</h3>
-                  <p className="mt-4 max-w-lg text-sm leading-7 text-slate-600 md:text-base">{text}</p>
-                  <Link href="/catalog" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-950 transition hover:text-blue-700">Katalogni ko‘rish <ArrowUpRight className="h-4 w-4" /></Link>
+                <div className="relative min-h-72 overflow-hidden border-t border-slate-200 bg-white lg:border-l lg:border-t-0">
+                  <Image src={image} alt="" fill sizes="(max-width: 1024px) 100vw, 56vw" className="object-cover transition-transform duration-700 hover:scale-[1.025]" style={{ objectPosition: imagePosition }} />
                 </div>
-              </div>
-              <div className="relative min-h-72 overflow-hidden border-t border-slate-200 bg-white lg:border-l lg:border-t-0">
-                <Image src={image} alt="" fill sizes="(max-width: 1024px) 100vw, 56vw" className="object-cover transition-transform duration-700 hover:scale-[1.025]" style={{ objectPosition: imagePosition }} />
-              </div>
-            </article>
+              </article>
+            </ScrollReveal>
           ))}
         </div>
       </div>
