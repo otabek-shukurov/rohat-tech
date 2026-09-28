@@ -4,11 +4,11 @@ Rohat Tech - maishiy texnika magazini uchun Next.js + NestJS + PostgreSQL + Pris
 
 ## MVP oqimi
 
-- JWT autentifikatsiya: admin va mijoz rollari
+- JWT autentifikatsiya: admin panel uchun
 - Katalog: kategoriya, brend, qidiruv va mahsulot detallari
 - Sevimlilar va savat
-- Checkout: yetkazib berish yoki magazindan olib ketish
-- Mijoz buyurtmalari
+- Login talab qilmaydigan tez buyurtma
+- Buyurtmalarni Netlify Function orqali Telegram botga yuborish
 - Admin panel: dashboard, mahsulotlar, kategoriyalar, brendlar, buyurtmalar, mijozlar, aksiyalar, hisobotlar, sozlamalar
 - Admin buyurtma statusini o'zgartiradi
 
@@ -17,6 +17,7 @@ Rohat Tech - maishiy texnika magazini uchun Next.js + NestJS + PostgreSQL + Pris
 ```text
 apps/api   NestJS backend
 apps/web   Next.js frontend
+netlify    Telegram buyurtma serverless funksiyasi
 prisma     PostgreSQL schema va seed
 ```
 
@@ -48,7 +49,17 @@ Frontend: `http://localhost:3000`
 
 Backend: `http://localhost:4000/api`
 
-## Demo loginlar
+## Telegram buyurtmalari
+
+Telegram tokeni frontendga yoki GitHub'ga yozilmaydi. Netlify sayti uchun quyidagi maxfiy environment variable'larni kiriting:
+
+```text
+TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID
+```
+
+Bot foydalanuvchiga xabar yuborishidan oldin foydalanuvchi botga `/start` yuborishi kerak. Environment variable'lar saqlangach Netlify'da yangi deploy ishga tushiring.
+
+## Admin login
 
 - Admin: `admin@rohat.tech` / `Admin12345`
-- Mijoz: `mijoz@rohat.tech` / `Mijoz12345`

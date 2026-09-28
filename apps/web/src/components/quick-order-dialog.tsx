@@ -22,6 +22,7 @@ export function QuickOrderDialog({ product, open, onClose }: QuickOrderDialogPro
   const [phone, setPhone] = useState('+998 ');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [orderNumber, setOrderNumber] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => setMounted(true), []);
@@ -34,6 +35,7 @@ export function QuickOrderDialog({ product, open, onClose }: QuickOrderDialogPro
     setPhone('+998 ');
     setSubmitting(false);
     setSubmitted(false);
+    setOrderNumber('');
     setError('');
 
     const previousOverflow = document.body.style.overflow;
@@ -64,6 +66,7 @@ export function QuickOrderDialog({ product, open, onClose }: QuickOrderDialogPro
     setError('');
     const payload = {
       productId: product.id,
+      productCategory: product.category.name,
       productName: product.name,
       unitPrice,
       quantity,
@@ -80,9 +83,12 @@ export function QuickOrderDialog({ product, open, onClose }: QuickOrderDialogPro
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        if (!response.ok) throw new Error('Buyurtmani yuborib bo‘lmadi');
+        const result = await response.json().catch(() => null) as { message?: string; orderNumber?: string } | null;
+        if (!response.ok) throw new Error(result?.message ?? 'Buyurtmani yuborib bo‘lmadi');
+        setOrderNumber(result?.orderNumber ?? '');
       } else {
         await new Promise((resolve) => window.setTimeout(resolve, 450));
+        setOrderNumber('TEST-ORDER');
       }
       setSubmitted(true);
     } catch (submitError) {
@@ -106,8 +112,9 @@ export function QuickOrderDialog({ product, open, onClose }: QuickOrderDialogPro
         {submitted ? (
           <div className="flex min-h-96 flex-col items-center justify-center px-6 py-12 text-center">
             <span className="grid h-14 w-14 place-items-center rounded-full bg-emerald-50 text-emerald-600"><CheckCircle2 className="h-7 w-7" /></span>
-            <h3 className="mt-5 text-xl font-semibold text-slate-950">Test buyurtmasi tayyor</h3>
-            <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">Telegram bot ulangach buyurtma operatorga avtomatik yuboriladi.</p>
+            <h3 className="mt-5 text-xl font-semibold text-slate-950">Buyurtma qabul qilindi</h3>
+            {orderNumber ? <p className="mt-2 text-sm font-semibold text-blue-700">Buyurtma raqami: {orderNumber}</p> : null}
+            <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">Operatorimiz tez orada siz bilan bog‘lanadi.</p>
             <Button type="button" className="mt-7" onClick={onClose}>Yopish</Button>
           </div>
         ) : (
