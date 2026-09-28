@@ -7,11 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronRight,
-  Headphones,
-  PackageCheck,
-  ShieldCheck,
-  ShoppingBag,
-  Truck
+  ShoppingBag
 } from 'lucide-react';
 import { BrandMarquee } from '@/components/brand-marquee';
 import { HomeExperience } from '@/components/home-experience';
@@ -34,13 +30,6 @@ const categories = [
   { title: 'Televizorlar', caption: 'Tiniq tasvir', image: '/images/hero-tv.png', position: '75% center' },
   { title: 'Kir yuvish mashinalari', caption: 'Kundalik qulaylik', image: '/images/hero-washer.png', position: '72% center' },
   { title: 'Konditsionerlar', caption: 'Har faslda komfort', image: '/images/rohat-tech-hero.png', position: '82% 25%' }
-];
-
-const services = [
-  { icon: Truck, title: 'Bepul yetkazib berish', text: 'Vobkent bo‘ylab buyurtmangizni manzilingizgacha bepul olib boramiz.' },
-  { icon: ShieldCheck, title: 'Rasmiy kafolat', text: 'Barcha mahsulotlar tekshirilgan va kafolat hujjati bilan.' },
-  { icon: Headphones, title: 'Mutaxassis maslahati', text: 'Tanlovdan keyingi servisgacha yordam beramiz.' },
-  { icon: PackageCheck, title: 'Olib ketish imkoniyati', text: 'Tayyor buyurtmani magazindan qulay vaqtda oling.' }
 ];
 
 export default function HomePage() {
@@ -167,25 +156,6 @@ export default function HomePage() {
               <Button asChild variant="outline" className="mt-5"><Link href="/catalog">Katalogni ochish</Link></Button>
             </ScrollReveal>
           )}
-        </div>
-      </section>
-
-      <section id="delivery" className="border-y border-slate-200 bg-[#eaf1ff] py-16 md:py-24">
-        <div className="mx-auto max-w-7xl px-4 md:px-5">
-          <ScrollReveal className="mx-auto max-w-3xl text-center">
-            <p className="text-xs font-semibold uppercase text-blue-700">Rohat Tech standarti</p>
-            <h2 className="mt-3 text-3xl font-medium leading-tight text-slate-950 md:text-5xl">Xariddan keyin ham yoningizdamiz</h2>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600">Texnikani tanlash, yetkazib berish va servis jarayonlari tushunarli va nazorat qilinadigan bo‘lishi kerak.</p>
-          </ScrollReveal>
-          <div className="mt-12 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
-            {services.map(({ icon: Icon, title, text }, index) => (
-              <ScrollReveal key={title} delay={index * 90} variant={index % 2 === 0 ? 'left' : 'right'} className="border-t border-blue-200 pt-6">
-                <span className="grid h-11 w-11 place-items-center rounded-md bg-white text-blue-700 shadow-sm"><Icon className="h-5 w-5" /></span>
-                <h3 className="mt-5 text-lg font-semibold text-slate-950">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
-              </ScrollReveal>
-            ))}
-          </div>
         </div>
       </section>
 

@@ -2,7 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Mail, MapPin, Phone, ShieldCheck, Truck } from 'lucide-react';
+import { Headphones, Mail, MapPin, PackageCheck, Phone, ShieldCheck, Truck } from 'lucide-react';
+
+const serviceItems = [
+  { icon: Truck, title: 'Bepul yetkazish', text: 'Vobkent bo‘ylab' },
+  { icon: ShieldCheck, title: 'Rasmiy kafolat', text: 'Kafolat hujjati bilan' },
+  { icon: Headphones, title: 'Mutaxassis maslahati', text: 'Tanlovda yordam beramiz' },
+  { icon: PackageCheck, title: 'Olib ketish', text: 'Magazindan qulay vaqtda' }
+];
 
 const shopLinks = [
   ['Katalog', '/catalog'],
@@ -23,15 +30,24 @@ export function SiteFooter() {
 
   return (
     <footer id="contact" className="border-t border-slate-800 bg-slate-950 pb-16 text-slate-300 md:pb-0">
+      <div id="delivery" className="border-b border-slate-800">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 px-4 md:grid-cols-4 md:px-5">
+          {serviceItems.map(({ icon: Icon, title, text }, index) => (
+            <div key={title} className={`flex min-w-0 items-center gap-3 border-slate-800 px-0 py-5 odd:border-r even:pl-4 md:border-b-0 md:border-r md:px-5 md:first:pl-0 md:last:border-r-0 md:last:pr-0 ${index < 2 ? 'border-b' : ''}`}>
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-slate-900 text-blue-400"><Icon className="h-4 w-4" /></span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold leading-5 text-white">{title}</p>
+                <p className="mt-0.5 text-xs leading-4 text-slate-500">{text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-5 md:py-16">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_0.7fr_0.8fr_1fr]">
           <div>
             <Link href="/" className="inline-flex items-center gap-2.5 text-lg font-bold text-white"><span className="grid h-10 w-10 place-items-center rounded-md bg-blue-600 text-sm font-black">RT</span>Rohat Tech</Link>
             <p className="mt-4 max-w-sm text-sm leading-6 text-slate-400">Uy uchun texnikani tushunarli tanlash, ishonchli xarid qilish va qulay yetkazib olish uchun zamonaviy savdo platformasi.</p>
-            <div className="mt-5 flex gap-5 text-xs text-slate-400">
-              <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-emerald-400" /> Rasmiy kafolat</span>
-              <span className="flex items-center gap-1.5"><Truck className="h-4 w-4 text-blue-400" /> Tez yetkazish</span>
-            </div>
           </div>
           <FooterLinks title="Xarid" items={shopLinks} />
           <FooterLinks title="Mijozlar uchun" items={customerLinks} />
