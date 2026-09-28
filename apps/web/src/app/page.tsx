@@ -6,8 +6,6 @@ import { type CSSProperties, useEffect, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
-  ArrowUpRight,
-  BadgeCheck,
   ChevronRight,
   Headphones,
   PackageCheck,
@@ -191,16 +189,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-slate-950 text-white">
-        <ScrollReveal className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-16 md:flex-row md:items-center md:justify-between md:px-5 md:py-20">
-          <div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-blue-300"><BadgeCheck className="h-5 w-5" /> Ishonchli xarid</div>
-            <h2 className="mt-4 max-w-3xl text-3xl font-medium leading-tight md:text-5xl">Uyingiz uchun mos texnikani bugun toping</h2>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">Kategoriya, brend va narx bo‘yicha saralang. Qolgan jarayonni biz qulay qilamiz.</p>
-          </div>
-          <Button asChild className="self-start bg-white text-slate-950 shadow-none hover:bg-blue-50 md:self-auto"><Link href="/catalog">Xaridni boshlash <ArrowUpRight className="h-4 w-4" /></Link></Button>
-        </ScrollReveal>
-      </section>
     </div>
   );
 }
