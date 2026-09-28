@@ -30,7 +30,7 @@ const steps = [
     icon: Truck,
     eyebrow: 'Qulay qabul qilish',
     title: 'Vobkent bo‘ylab bepul yetkazib beramiz',
-    text: 'Yetkazib berish yoki magazindan olib ketishni tanlang. Buyurtma holatini profilingizdan kuzating.',
+    text: 'Buyurtma tafsilotlarini kiriting. Operatorimiz siz bilan bog‘lanib, xaridni tasdiqlaydi.',
     image: '/images/hero-washer.png',
     imagePosition: '72% center',
     color: 'bg-emerald-50'

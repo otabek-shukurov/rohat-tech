@@ -4,9 +4,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Heart, PackageCheck, ShieldCheck, ShoppingCart, Truck } from 'lucide-react';
+import { Check, Heart, PackageCheck, ShieldCheck, ShoppingBag, ShoppingCart, Truck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { QuickOrderDialog } from '@/components/quick-order-dialog';
 import { Product, api, isDemoMode } from '@/lib/api';
 import { findDemoProduct } from '@/lib/demo-catalog';
 import { formatPrice } from '@/lib/utils';
@@ -22,6 +23,7 @@ export default function ProductPage() {
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [favorite, setFavorite] = useState(false);
+  const [orderOpen, setOrderOpen] = useState(false);
 
   useEffect(() => {
     if (isDemoMode) {
@@ -94,8 +96,9 @@ export default function ProductPage() {
               <p className="text-3xl font-bold text-slate-950">{formatPrice(salePrice)}</p>
               <p className={`mt-2 text-sm font-semibold ${product.stock > 0 ? 'text-emerald-700' : 'text-red-600'}`}>{product.stock > 0 ? `Omborda mavjud: ${product.stock} dona` : 'Hozircha mavjud emas'}</p>
             </div>
-            <div className="mt-6 grid grid-cols-[1fr_auto] gap-3">
-              <Button onClick={addToCart} disabled={adding || product.stock < 1}><ShoppingCart className="h-4 w-4" /> {adding ? 'Qo‘shilmoqda...' : added ? 'Savatga qo‘shildi' : 'Savatga qo‘shish'}</Button>
+            <div className="mt-6 grid grid-cols-[1fr_auto_auto] gap-3">
+              <Button onClick={() => setOrderOpen(true)} disabled={product.stock < 1}><ShoppingBag className="h-4 w-4" /> Buyurtma berish</Button>
+              <Button variant="outline" size="icon" onClick={addToCart} disabled={adding || product.stock < 1} aria-label={added ? 'Savatga qo‘shildi' : 'Savatga qo‘shish'} title={added ? 'Savatga qo‘shildi' : 'Savatga qo‘shish'}>{added ? <Check className="h-4 w-4 text-emerald-600" /> : <ShoppingCart className="h-4 w-4" />}</Button>
               <Button variant="outline" size="icon" onClick={toggleFavorite} aria-label={favorite ? 'Sevimlilardan olib tashlash' : 'Sevimlilarga qo‘shish'} title={favorite ? 'Sevimlilardan olib tashlash' : 'Sevimlilarga qo‘shish'}><Heart className={cn('h-4 w-4', favorite && 'fill-red-500 text-red-500')} /></Button>
             </div>
             <div className="mt-7 grid gap-3 border-t border-slate-200 pt-6 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
@@ -114,6 +117,7 @@ export default function ProductPage() {
           </div>
         </section>
       </div>
+      <QuickOrderDialog product={product} open={orderOpen} onClose={() => setOrderOpen(false)} />
     </div>
   );
 }

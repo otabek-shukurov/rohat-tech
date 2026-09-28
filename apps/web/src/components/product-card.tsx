@@ -2,8 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, ShoppingCart } from 'lucide-react';
+import { Check, Heart, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
+import { QuickOrderDialog } from '@/components/quick-order-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Product, api, isDemoMode } from '@/lib/api';
@@ -16,6 +17,7 @@ export function ProductCard({ product }: { product: Product }) {
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [favorite, setFavorite] = useState(false);
+  const [orderOpen, setOrderOpen] = useState(false);
 
   async function addToCart() {
     if (isDemoMode) {
@@ -56,6 +58,7 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   return (
+    <>
       <article className="group relative flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_16px_40px_rgba(15,23,42,0.09)]">
         <Link href={`/products/${product.slug}`} className="block">
           <div className="relative aspect-square bg-slate-50 p-6">
@@ -81,8 +84,13 @@ export function ProductCard({ product }: { product: Product }) {
             </div>
             <p className={`text-xs font-medium ${product.stock > 0 ? 'text-emerald-700' : 'text-red-600'}`}>{product.stock > 0 ? 'Omborda bor' : 'Tugagan'}</p>
           </div>
-          <Button className="mt-4 w-full" onClick={addToCart} disabled={adding || product.stock < 1}><ShoppingCart className="h-4 w-4" /> {adding ? 'Qo‘shilmoqda' : added ? 'Qo‘shildi' : 'Savatga'}</Button>
+          <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <Button onClick={() => setOrderOpen(true)} disabled={product.stock < 1}><ShoppingBag className="h-4 w-4" /><span className="sm:hidden">Buyurtma</span><span className="hidden sm:inline">Buyurtma berish</span></Button>
+            <Button variant="outline" size="icon" onClick={addToCart} disabled={adding || product.stock < 1} aria-label={added ? 'Savatga qo‘shildi' : 'Savatga qo‘shish'} title={added ? 'Savatga qo‘shildi' : 'Savatga qo‘shish'}>{added ? <Check className="h-4 w-4 text-emerald-600" /> : <ShoppingCart className="h-4 w-4" />}</Button>
+          </div>
         </div>
       </article>
+      <QuickOrderDialog product={product} open={orderOpen} onClose={() => setOrderOpen(false)} />
+    </>
   );
 }

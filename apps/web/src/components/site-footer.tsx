@@ -12,10 +12,9 @@ const shopLinks = [
 ];
 
 const customerLinks = [
-  ['Buyurtmalarim', '/orders'],
-  ['Profil', '/profile'],
-  ['Yetkazib berish', '/checkout'],
-  ['Tizimga kirish', '/auth']
+  ['Yetkazib berish', '/#delivery'],
+  ['Bog‘lanish', '/#contact'],
+  ['Katalog', '/catalog']
 ];
 
 export function SiteFooter() {
@@ -23,7 +22,7 @@ export function SiteFooter() {
   if (pathname.startsWith('/admin')) return null;
 
   return (
-    <footer className="border-t border-slate-800 bg-slate-950 pb-16 text-slate-300 md:pb-0">
+    <footer id="contact" className="border-t border-slate-800 bg-slate-950 pb-16 text-slate-300 md:pb-0">
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-5 md:py-16">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_0.7fr_0.8fr_1fr]">
           <div>
@@ -49,7 +48,7 @@ export function SiteFooter() {
       <div className="border-t border-slate-800">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between md:px-5">
           <span>© 2026 Rohat Tech. Barcha huquqlar himoyalangan.</span>
-          <div className="flex gap-5"><Link href="/profile" className="hover:text-slate-300">Maxfiylik</Link><Link href="/orders" className="hover:text-slate-300">Foydalanish shartlari</Link></div>
+          <div className="flex gap-5"><span>Maxfiylik</span><span>Foydalanish shartlari</span></div>
         </div>
       </div>
     </footer>

@@ -4,10 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
-  CircleUserRound,
   Heart,
   Home,
-  LayoutDashboard,
   MapPin,
   Menu,
   PackageSearch,
@@ -15,35 +13,26 @@ import {
   ShoppingCart,
   X
 } from 'lucide-react';
-import { SessionUser, api, getToken } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { label: 'Bosh sahifa', href: '/' },
   { label: 'Katalog', href: '/catalog' },
-  { label: 'Aksiyalar', href: '/catalog?discount=true' },
-  { label: 'Buyurtmalar', href: '/orders' }
+  { label: 'Aksiyalar', href: '/catalog?discount=true' }
 ];
 
 const mobileItems = [
   { label: 'Asosiy', href: '/', icon: Home },
   { label: 'Katalog', href: '/catalog', icon: PackageSearch },
   { label: 'Sevimli', href: '/favorites', icon: Heart },
-  { label: 'Savat', href: '/cart', icon: ShoppingCart },
-  { label: 'Profil', href: '/profile', icon: CircleUserRound }
+  { label: 'Savat', href: '/cart', icon: ShoppingCart }
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const [user, setUser] = useState<SessionUser | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [discountCatalog, setDiscountCatalog] = useState(false);
-
-  useEffect(() => {
-    if (!getToken()) return;
-    api<SessionUser>('/auth/me').then(setUser).catch(() => setUser(null));
-  }, []);
 
   useEffect(() => setMenuOpen(false), [pathname]);
 
@@ -114,12 +103,8 @@ export function SiteHeader() {
           </form>
 
           <div className="ml-auto flex items-center gap-1">
-            {user?.role === 'ADMIN' ? (
-              <Link href="/admin" className={cn('hidden h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold transition lg:flex', transparent ? 'text-white hover:bg-white/15' : 'text-slate-700 hover:bg-slate-100')}><LayoutDashboard className="h-4 w-4" /> Admin</Link>
-            ) : null}
             <Link href="/favorites" className={cn('hidden h-10 w-10 place-items-center rounded-md transition md:grid', transparent ? 'text-white hover:bg-white/15' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950')} aria-label="Sevimlilar" title="Sevimlilar"><Heart className="h-5 w-5" /></Link>
             <Link href="/cart" className={cn('relative grid h-10 w-10 place-items-center rounded-md transition', transparent ? 'text-white hover:bg-white/15' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950')} aria-label="Savat" title="Savat"><ShoppingCart className="h-5 w-5" /></Link>
-            <Link href={user ? '/profile' : '/auth'} className={cn('hidden h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold transition sm:flex', transparent ? 'border-white/35 bg-white/10 text-white backdrop-blur hover:bg-white/20' : 'border-slate-300 bg-white text-slate-800 hover:border-slate-400 hover:bg-slate-50')}><CircleUserRound className="h-4 w-4" /> {user ? user.name.split(' ')[0] : 'Kirish'}</Link>
             <button type="button" onClick={() => setMenuOpen((open) => !open)} className={cn('grid h-10 w-10 place-items-center rounded-md transition md:hidden', transparent ? 'text-white hover:bg-white/15' : 'text-slate-700 hover:bg-slate-100')} aria-label="Menyuni ochish" aria-expanded={menuOpen}>{menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
           </div>
         </div>
@@ -139,14 +124,13 @@ export function SiteHeader() {
           <nav className="border-t bg-white p-4 shadow-xl md:hidden" aria-label="Mobil menyu">
             <div className="grid gap-1">
               {navItems.map((item) => <Link key={item.href} href={item.href} className="rounded-md px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-100">{item.label}</Link>)}
-              <Link href={user ? '/profile' : '/auth'} className="mt-2 rounded-md bg-blue-600 px-3 py-2.5 text-center text-sm font-semibold text-white">{user ? 'Profil' : 'Tizimga kirish'}</Link>
             </div>
           </nav>
         ) : null}
       </header>
 
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-1.5 shadow-[0_-8px_30px_rgba(15,23,42,0.08)] backdrop-blur-lg md:hidden" aria-label="Mobil tezkor navigatsiya">
-        <div className="mx-auto grid max-w-md grid-cols-5">
+        <div className="mx-auto grid max-w-md grid-cols-4">
           {mobileItems.map(({ label, href, icon: Icon }) => {
             const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
             return (

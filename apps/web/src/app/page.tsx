@@ -172,7 +172,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-slate-200 bg-[#eaf1ff] py-16 md:py-24">
+      <section id="delivery" className="border-y border-slate-200 bg-[#eaf1ff] py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-5">
           <ScrollReveal className="mx-auto max-w-3xl text-center">
             <p className="text-xs font-semibold uppercase text-blue-700">Rohat Tech standarti</p>
