@@ -13,7 +13,7 @@ import { cn, formatPrice } from '@/lib/utils';
 export function ProductCard({ product }: { product: Product }) {
   const image = product.images[0]?.url ?? '/images/rohat-tech-hero.png';
   const salePrice = product.discountPrice ?? product.price;
-  const isLifestyleImage = image.startsWith('/images/');
+  const isLifestyleImage = image.startsWith('/images/') || image.includes('images.unsplash.com');
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [favorite, setFavorite] = useState(false);

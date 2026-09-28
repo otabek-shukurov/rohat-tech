@@ -73,6 +73,8 @@ export default function ProductPage() {
 
   const images = product.images.length ? product.images : [{ id: 'fallback', url: fallbackImage, alt: product.name }];
   const salePrice = product.discountPrice ?? product.price;
+  const activeImage = images[selectedImage]?.url ?? fallbackImage;
+  const activeImageIsRemotePhoto = activeImage.includes('images.unsplash.com');
 
   return (
     <div className="bg-white">
@@ -81,7 +83,7 @@ export default function ProductPage() {
         <div className="grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12">
           <section>
             <div className="relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-              <Image src={images[selectedImage]?.url ?? fallbackImage} alt={images[selectedImage]?.alt ?? product.name} fill priority sizes="(max-width: 1024px) 100vw, 55vw" className="object-contain p-7 md:p-10" />
+              <Image src={activeImage} alt={images[selectedImage]?.alt ?? product.name} fill priority sizes="(max-width: 1024px) 100vw, 55vw" className={activeImageIsRemotePhoto ? 'object-cover' : 'object-contain p-7 md:p-10'} />
               {product.discountPrice ? <Badge className="absolute left-4 top-4 bg-red-50 px-3 py-1.5 text-red-700">Maxsus narx</Badge> : null}
             </div>
             {images.length > 1 ? <div className="mt-3 flex gap-3 overflow-x-auto pb-1">{images.map((image, index) => <button key={image.id} type="button" onClick={() => setSelectedImage(index)} className={cn('relative h-20 w-20 shrink-0 overflow-hidden rounded-md border bg-slate-50 transition', selectedImage === index ? 'border-blue-600 ring-2 ring-blue-100' : 'border-slate-200 hover:border-slate-400')} aria-label={`${index + 1}-rasm`}><Image src={image.url} alt="" fill sizes="80px" className="object-contain p-2" /></button>)}</div> : null}

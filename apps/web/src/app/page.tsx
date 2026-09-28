@@ -7,15 +7,15 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronRight,
+  Plus,
   ShoppingBag
 } from 'lucide-react';
 import { BrandMarquee } from '@/components/brand-marquee';
-import { HomeExperience } from '@/components/home-experience';
 import { ProductCard } from '@/components/product-card';
 import { ScrollReveal } from '@/components/scroll-reveal';
 import { Button } from '@/components/ui/button';
 import { Product, api, isDemoMode } from '@/lib/api';
-import { demoProducts } from '@/lib/demo-catalog';
+import { demoCatalogMeta, demoCategoryVisuals, demoProducts } from '@/lib/demo-catalog';
 import { cn } from '@/lib/utils';
 
 const heroSlides = [
@@ -25,23 +25,43 @@ const heroSlides = [
   { image: '/images/hero-washer.png', mobileImage: '/images/mobile-hero-washer.png', label: 'Kundalik yordamchi', title: 'Tozalik kamroq vaqt talab qiladi', position: 'center', motion: 'hero-media--left' }
 ];
 
-const categories = [
-  { title: 'Sovutgichlar', caption: 'Oshxona uchun', image: '/images/hero-fridge.png', position: '70% center' },
-  { title: 'Televizorlar', caption: 'Tiniq tasvir', image: '/images/hero-tv.png', position: '75% center' },
-  { title: 'Kir yuvish mashinalari', caption: 'Kundalik qulaylik', image: '/images/hero-washer.png', position: '72% center' },
-  { title: 'Konditsionerlar', caption: 'Har faslda komfort', image: '/images/rohat-tech-hero.png', position: '82% 25%' }
-];
+const categoryCaptions: Record<string, string> = {
+  sovutgichlar: 'Oshxona uchun',
+  'kir-yuvish-mashinalari': 'Kundalik qulaylik',
+  televizorlar: 'Tiniq tasvir',
+  konditsionerlar: 'Har faslda komfort',
+  changyutgichlar: 'Toza uy uchun',
+  blenderlar: 'Tez va mazali',
+  'elektr-choynaklar': 'Har kuni issiq ichimlik',
+  kulerlar: 'Toza va salqin suv',
+  noutbuklar: 'Ish va ta’lim uchun',
+  dazmollar: 'Saranjom kiyimlar',
+  'gaz-plitalar': 'Qulay taom tayyorlash',
+  'mikrotolqinli-pechlar': 'Tez isitish',
+  'oshxona-jihozlari': 'Ko‘proq imkoniyat',
+  'boshqa-texnika': 'Uy uchun foydali'
+};
+
+const categories = demoCatalogMeta.categories.map((category) => ({
+  ...category,
+  caption: categoryCaptions[category.slug],
+  image: demoCategoryVisuals[category.slug]
+}));
+
+const INITIAL_PRODUCT_COUNT = 20;
+const LOAD_MORE_COUNT = 20;
 
 export default function HomePage() {
-  const [products, setProducts] = useState<Product[]>(isDemoMode ? demoProducts.slice(0, 4) : []);
+  const [products, setProducts] = useState<Product[]>(isDemoMode ? demoProducts : []);
   const [loading, setLoading] = useState(!isDemoMode);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_PRODUCT_COUNT);
 
   useEffect(() => {
     if (isDemoMode) return;
 
     api<Product[]>('/products')
-      .then((items) => setProducts(items.slice(0, 4)))
+      .then(setProducts)
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
   }, []);
@@ -56,6 +76,8 @@ export default function HomePage() {
   }
 
   const activeHero = heroSlides[activeSlide];
+  const visibleProducts = products.slice(0, visibleCount);
+  const remainingProducts = Math.max(0, products.length - visibleProducts.length);
 
   return (
     <div className="overflow-x-clip bg-white">
@@ -115,15 +137,15 @@ export default function HomePage() {
           </div>
           <Link href="/catalog" className="hidden items-center gap-1 text-sm font-semibold text-slate-800 transition hover:text-blue-700 sm:flex">Barcha kategoriyalar <ChevronRight className="h-4 w-4" /></Link>
         </ScrollReveal>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
           {categories.map((category, index) => (
-            <ScrollReveal key={category.title} delay={index * 90} variant="scale">
-              <Link href="/catalog" className="group relative block aspect-[4/3] overflow-hidden rounded-lg bg-slate-900 shadow-sm">
-                <Image src={category.image} alt={category.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.045]" style={{ objectPosition: category.position }} />
+            <ScrollReveal key={category.slug} delay={(index % 5) * 70} variant="scale">
+              <Link href={`/catalog?category=${category.slug}`} className="group relative block aspect-[4/3] overflow-hidden rounded-lg bg-slate-900 shadow-sm">
+                <Image src={category.image} alt={category.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.045]" />
                 <div className="absolute inset-0 bg-slate-950/50 transition-colors group-hover:bg-slate-950/62" />
-                <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+                <div className="absolute inset-x-0 bottom-0 p-3.5 text-white sm:p-4">
                   <p className="text-xs font-medium text-slate-200">{category.caption}</p>
-                  <div className="mt-1 flex items-center justify-between gap-3"><h3 className="text-lg font-semibold">{category.title}</h3><ChevronRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" /></div>
+                  <div className="mt-1 flex items-end justify-between gap-2"><h3 className="text-sm font-semibold leading-5 sm:text-base">{category.name}</h3><ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-x-1" /></div>
                 </div>
               </Link>
             </ScrollReveal>
@@ -131,23 +153,28 @@ export default function HomePage() {
         </div>
       </section>
 
-      <HomeExperience />
-
       <section className="bg-slate-50 py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-5">
           <ScrollReveal className="mb-9 flex items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase text-blue-700">Yangi kelganlar</p>
+              <p className="text-xs font-semibold uppercase text-blue-700">Mahsulotlar</p>
               <h2 className="mt-3 text-3xl font-medium text-slate-950 md:text-5xl">Siz uchun tanladik</h2>
-              <p className="mt-3 text-sm text-slate-600">Ombordagi yangi va ommabop modellar</p>
+              <p className="mt-3 text-sm text-slate-600">{visibleProducts.length} ta mahsulot ko‘rsatilmoqda</p>
             </div>
             <Link href="/catalog" className="hidden items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-700 sm:flex">Barchasini ko‘rish <ChevronRight className="h-4 w-4" /></Link>
           </ScrollReveal>
 
           {loading ? (
-            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{Array.from({ length: 4 }).map((_, index) => <ProductSkeleton key={index} />)}</div>
+            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{Array.from({ length: 8 }).map((_, index) => <ProductSkeleton key={index} />)}</div>
           ) : products.length ? (
-            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{products.map((product, index) => <ScrollReveal key={product.id} delay={index * 80} variant="scale"><ProductCard product={product} /></ScrollReveal>)}</div>
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{visibleProducts.map((product, index) => <ScrollReveal key={product.id} delay={(index % 4) * 70} variant="scale"><ProductCard product={product} /></ScrollReveal>)}</div>
+              {remainingProducts > 0 ? (
+                <div className="mt-10 flex justify-center">
+                  <Button variant="outline" className="h-12 min-w-52 bg-white" onClick={() => setVisibleCount((count) => count + LOAD_MORE_COUNT)}><Plus className="h-4 w-4" /> Yana {Math.min(LOAD_MORE_COUNT, remainingProducts)} ta yuklash</Button>
+                </div>
+              ) : null}
+            </>
           ) : (
             <ScrollReveal variant="scale" className="flex flex-col items-center rounded-lg border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
               <ShoppingBag className="h-8 w-8 text-blue-600" />

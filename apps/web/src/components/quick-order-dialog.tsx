@@ -121,7 +121,7 @@ export function QuickOrderDialog({ product, open, onClose }: QuickOrderDialogPro
           <form onSubmit={submitOrder} className="p-5 sm:p-6">
             <div className="flex gap-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
               <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md bg-white">
-                <Image src={image} alt={product.name} fill sizes="96px" className={cn(image.startsWith('/images/') ? 'object-cover' : 'object-contain p-2')} />
+                <Image src={image} alt={product.name} fill sizes="96px" className={cn(image.startsWith('/images/') || image.includes('images.unsplash.com') ? 'object-cover' : 'object-contain p-2')} />
               </div>
               <div className="min-w-0 py-1">
                 <p className="text-xs font-medium text-slate-500">{product.brand.name}</p>

@@ -163,21 +163,9 @@ select {
   transform: perspective(1000px) translate3d(0, 0, 0) rotateX(0) rotateY(0) scale(1);
 }
 
-.experience-card-shell {
-  --stack-offset: 0px;
-}
-
 @media (min-width: 768px) {
   .hero-media {
     object-position: var(--hero-position, center);
-  }
-}
-
-@media (min-width: 1024px) {
-  .experience-card-shell {
-    position: sticky;
-    top: calc(168px + var(--stack-offset));
-    margin-bottom: 96px;
   }
 }
 
