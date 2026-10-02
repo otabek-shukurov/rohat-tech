@@ -1,5 +1,3 @@
-const { randomBytes } = require('node:crypto');
-
 const jsonHeaders = {
   'Content-Type': 'application/json; charset=utf-8',
   'Cache-Control': 'no-store'
@@ -29,7 +27,7 @@ exports.handler = async function handler(event) {
   }
 
   const orderedAt = new Date();
-  const orderNumber = createOrderNumber(orderedAt);
+  const pendingOrderNumber = 'aniqlanmoqda';
   const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -37,14 +35,34 @@ exports.handler = async function handler(event) {
       chat_id: chatId,
       parse_mode: 'HTML',
       disable_web_page_preview: true,
+      text: createTelegramMessage(order, pendingOrderNumber, orderedAt)
+    })
+  });
+
+  const telegramResult = await telegramResponse.json().catch(() => null);
+  const messageId = telegramResult?.result?.message_id;
+
+  if (!telegramResponse.ok || telegramResult?.ok !== true || !Number.isInteger(messageId)) {
+    console.error(`Telegram sendMessage failed (${telegramResponse.status}): ${JSON.stringify(telegramResult).slice(0, 500)}`);
+    return response(502, { message: 'Buyurtmani yuborib bo‘lmadi. Iltimos, qayta urinib ko‘ring.' });
+  }
+
+  const orderNumber = createOrderNumber(messageId);
+  const editResponse = await fetch(`https://api.telegram.org/bot${botToken}/editMessageText`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      message_id: messageId,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
       text: createTelegramMessage(order, orderNumber, orderedAt)
     })
   });
 
-  if (!telegramResponse.ok) {
-    const telegramError = await telegramResponse.text().catch(() => 'Unknown Telegram error');
-    console.error(`Telegram sendMessage failed (${telegramResponse.status}): ${telegramError.slice(0, 500)}`);
-    return response(502, { message: 'Buyurtmani yuborib bo‘lmadi. Iltimos, qayta urinib ko‘ring.' });
+  if (!editResponse.ok) {
+    const editError = await editResponse.text().catch(() => 'Unknown Telegram error');
+    console.error(`Telegram editMessageText failed (${editResponse.status}): ${editError.slice(0, 500)}`);
   }
 
   return response(200, {
@@ -79,23 +97,8 @@ function cleanText(value, maxLength) {
   return value.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, maxLength);
 }
 
-function createOrderNumber(date) {
-  const parts = getTashkentDateParts(date);
-  const suffix = randomBytes(2).toString('hex').toUpperCase();
-  return `RT-${parts.year}${parts.month}${parts.day}-${parts.hour}${parts.minute}-${suffix}`;
-}
-
-function getTashkentDateParts(date) {
-  const formatter = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Tashkent',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23'
-  });
-  return Object.fromEntries(formatter.formatToParts(date).filter((part) => part.type !== 'literal').map((part) => [part.type, part.value]));
+function createOrderNumber(messageId) {
+  return `RT-${String(messageId).padStart(6, '0')}`;
 }
 
 function createTelegramMessage(order, orderNumber, orderedAt) {
@@ -148,4 +151,5 @@ function response(statusCode, body, extraHeaders = {}) {
 }
 
 exports.validateOrder = validateOrder;
+exports.createOrderNumber = createOrderNumber;
 exports.createTelegramMessage = createTelegramMessage;

@@ -24,6 +24,36 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-color: #94a3b8 #f1f5f9;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+*::-webkit-scrollbar-thumb {
+  min-height: 48px;
+  border: 3px solid #f1f5f9;
+  border-radius: 999px;
+  background: #94a3b8;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: #2563eb;
+}
+
+*::-webkit-scrollbar-corner {
+  background: #f1f5f9;
 }
 
 body {
