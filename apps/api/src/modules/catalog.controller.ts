@@ -14,6 +14,11 @@ const productInclude = {
 export class CatalogController {
   constructor(private readonly prisma: PrismaService) {}
 
+  @Get('health')
+  health() {
+    return { ok: true, service: 'rohat-tech-api' };
+  }
+
   @Get('catalog/meta')
   async meta() {
     const [categories, brands] = await Promise.all([

@@ -8,7 +8,8 @@ async function bootstrap() {
     origin: process.env.WEB_ORIGIN?.split(',') ?? ['http://localhost:3000'],
     credentials: true
   });
-  await app.listen(process.env.PORT ? Number(process.env.PORT) : 4000);
+  app.enableShutdownHooks();
+  await app.listen(process.env.PORT ? Number(process.env.PORT) : 4000, '0.0.0.0');
 }
 
 bootstrap();

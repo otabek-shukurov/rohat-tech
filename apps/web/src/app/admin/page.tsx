@@ -19,18 +19,30 @@ import {
   type AdminOrder,
   demoAdminOrders,
   formatAdminOrderDate,
-  getAdminMetrics,
-  loadAdminOrders,
-  lowStockProducts,
-  weeklySales
+  loadAdminOrders
 } from '@/lib/admin-demo';
+import { api, isDemoMode, type Product } from '@/lib/api';
+import { demoProducts } from '@/lib/demo-catalog';
 import { formatPrice } from '@/lib/utils';
 
 export default function AdminPage() {
-  const [orders, setOrders] = useState<AdminOrder[]>(demoAdminOrders);
+  const [orders, setOrders] = useState<AdminOrder[]>(isDemoMode ? demoAdminOrders : []);
+  const [products, setProducts] = useState<Product[]>(isDemoMode ? demoProducts : []);
 
   useEffect(() => {
-    const refresh = () => setOrders(loadAdminOrders());
+    const refresh = () => {
+      if (isDemoMode) {
+        setOrders(loadAdminOrders());
+        return;
+      }
+      Promise.all([
+        api<AdminOrder[]>('/admin/orders'),
+        api<Product[]>('/admin/products')
+      ]).then(([nextOrders, nextProducts]) => {
+        setOrders(nextOrders);
+        setProducts(nextProducts);
+      });
+    };
     refresh();
     window.addEventListener('storage', refresh);
     window.addEventListener('rohat:admin-orders', refresh);
@@ -40,8 +52,19 @@ export default function AdminPage() {
     };
   }, []);
 
-  const metrics = useMemo(() => getAdminMetrics(orders), [orders]);
-  const maxSale = Math.max(...weeklySales.map((item) => item.value));
+  const metrics = useMemo(() => {
+    const activeOrders = orders.filter((order) => !['COMPLETED', 'CANCELLED'].includes(order.status));
+    return {
+      orders: orders.length,
+      activeOrders: activeOrders.length,
+      products: products.length,
+      customers: new Set(orders.map((order) => order.customer.phone)).size,
+      revenue: orders.filter((order) => order.paymentStatus === 'PAID').reduce((sum, order) => sum + order.total, 0)
+    };
+  }, [orders, products]);
+  const lowStockProducts = useMemo(() => products.filter((product) => product.isActive !== false && product.stock <= 7).sort((a, b) => a.stock - b.stock), [products]);
+  const weeklySales = useMemo(() => getWeeklySales(orders), [orders]);
+  const maxSale = Math.max(1, ...weeklySales.map((item) => item.value));
   const stats = [
     {
       label: 'Jami savdo',
@@ -81,7 +104,7 @@ export default function AdminPage() {
     <div className="mx-auto max-w-[1540px] px-4 py-6 md:px-6 lg:px-8 lg:py-7">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-slate-500">2-oktabr, 2026</p>
+          <p className="text-sm font-medium text-slate-500">{new Intl.DateTimeFormat('uz-UZ', { dateStyle: 'long' }).format(new Date())}</p>
           <h1 className="mt-1 text-2xl font-bold text-slate-950 md:text-3xl">Xayrli kun, Administrator</h1>
           <p className="mt-1 text-sm text-slate-500">Magazinning bugungi holati va tezkor ko‘rsatkichlari.</p>
         </div>
@@ -122,7 +145,7 @@ export default function AdminPage() {
             </div>
             <div className="flex items-center gap-2 text-sm font-bold text-slate-950">
               <TrendingUp className="h-4 w-4 text-emerald-600" />
-              {formatPrice(92400000)}
+              {formatPrice(weeklySales.reduce((sum, item) => sum + item.value, 0))}
             </div>
           </div>
           <div className="px-4 pb-5 pt-6 sm:px-6">
@@ -235,4 +258,23 @@ export default function AdminPage() {
 
 function formatCompactPrice(value: number) {
   return `${(value / 1000000).toFixed(1)} mln`;
+}
+
+function getWeeklySales(orders: AdminOrder[]) {
+  const formatter = new Intl.DateTimeFormat('uz-UZ', { weekday: 'short' });
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - (6 - index));
+    const nextDate = new Date(date);
+    nextDate.setDate(date.getDate() + 1);
+    const value = orders
+      .filter((order) => order.paymentStatus === 'PAID' && order.soldAt)
+      .filter((order) => {
+        const soldAt = new Date(order.soldAt as string);
+        return soldAt >= date && soldAt < nextDate;
+      })
+      .reduce((sum, order) => sum + order.total, 0);
+    return { label: formatter.format(date).slice(0, 2), value };
+  });
 }

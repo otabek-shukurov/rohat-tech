@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { type ReactNode, useEffect, useState } from 'react';
 import {
   BarChart3,
@@ -9,6 +9,8 @@ import {
   Boxes,
   ChevronRight,
   LayoutDashboard,
+  Loader2,
+  LogOut,
   Menu,
   Megaphone,
   Settings,
@@ -18,6 +20,7 @@ import {
   Users,
   X
 } from 'lucide-react';
+import { api, clearToken, isDemoMode, type SessionUser } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 const navigation = [
@@ -59,7 +62,30 @@ const pageNames: Record<string, string> = {
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [session, setSession] = useState<SessionUser | null>(null);
+  const [authReady, setAuthReady] = useState(isDemoMode || pathname === '/admin/login');
+
+  useEffect(() => {
+    if (isDemoMode || pathname === '/admin/login') {
+      setAuthReady(true);
+      return;
+    }
+    let active = true;
+    api<SessionUser>('/auth/me')
+      .then((user) => {
+        if (!active) return;
+        if (user.role !== 'ADMIN') throw new Error('Admin ruxsati yo‘q');
+        setSession(user);
+        setAuthReady(true);
+      })
+      .catch(() => {
+        clearToken();
+        router.replace('/admin/login');
+      });
+    return () => { active = false; };
+  }, [pathname, router]);
 
   useEffect(() => setMenuOpen(false), [pathname]);
 
@@ -73,6 +99,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }, [menuOpen]);
 
   const pageName = pageNames[pathname] ?? 'Boshqaruv paneli';
+
+  if (pathname === '/admin/login') return <>{children}</>;
+  if (!authReady) return <div className="grid min-h-screen place-items-center bg-slate-50 text-blue-700"><Loader2 className="h-7 w-7 animate-spin" /></div>;
+
+  function logout() {
+    clearToken();
+    router.replace('/admin/login');
+  }
 
   return (
     <div className="min-h-screen bg-[#f6f7f9] text-slate-950 lg:grid lg:grid-cols-[272px_minmax(0,1fr)]">
@@ -127,7 +161,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
             <span className="hidden items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 sm:inline-flex">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
-              Demo rejim
+              {isDemoMode ? 'Demo rejim' : 'Baza ulangan'}
             </span>
 
             <button
@@ -143,10 +177,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
               <span className="grid h-9 w-9 place-items-center rounded-md bg-slate-950 text-xs font-bold text-white">AS</span>
               <div className="hidden leading-tight md:block">
-                <p className="text-xs font-semibold text-slate-900">Administrator</p>
+                <p className="text-xs font-semibold text-slate-900">{session?.name ?? 'Administrator'}</p>
                 <p className="mt-0.5 text-[11px] text-slate-500">To‘liq kirish</p>
               </div>
             </div>
+
+            {!isDemoMode ? <button type="button" onClick={logout} title="Chiqish" aria-label="Admin paneldan chiqish" className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-slate-200 text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"><LogOut className="h-[18px] w-[18px]" /></button> : null}
           </div>
         </header>
 

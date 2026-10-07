@@ -26,6 +26,10 @@ export type AdminOrder = {
   customer: { name: string; phone: string };
   items: AdminOrderItem[];
   total: number;
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+  paymentMethod: string | null;
+  soldAt: string | null;
+  soldBy?: { id: string; name: string } | null;
 };
 
 export const adminOrderStatuses: Array<{ value: AdminOrderStatus; label: string }> = [
@@ -100,9 +104,22 @@ export function updateAdminOrderStatus(id: string, status: AdminOrderStatus) {
   return orders;
 }
 
+export function markDemoOrderSold(id: string, paymentMethod: string) {
+  const orders = loadAdminOrders().map((order) => order.id === id ? {
+    ...order,
+    status: 'COMPLETED' as const,
+    paymentStatus: 'PAID' as const,
+    paymentMethod,
+    soldAt: new Date().toISOString(),
+    soldBy: { id: 'demo-admin', name: 'Administrator' }
+  } : order);
+  saveAdminOrders(orders);
+  return orders;
+}
+
 export function getAdminMetrics(orders: AdminOrder[]) {
   const activeOrders = orders.filter((order) => !['COMPLETED', 'CANCELLED'].includes(order.status));
-  const revenue = orders.filter((order) => order.status !== 'CANCELLED').reduce((sum, order) => sum + order.total, 0);
+  const revenue = orders.filter((order) => order.paymentStatus === 'PAID').reduce((sum, order) => sum + order.total, 0);
   const customers = new Set(orders.map((order) => order.customer.phone)).size;
   return { orders: orders.length, activeOrders: activeOrders.length, products: demoProducts.length, customers, revenue };
 }
@@ -145,6 +162,10 @@ function createOrder(
     address,
     customer: { name, phone },
     items: normalizedItems,
-    total: normalizedItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+    total: normalizedItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
+    paymentStatus: status === 'COMPLETED' ? 'PAID' : 'PENDING',
+    paymentMethod: status === 'COMPLETED' ? 'cash' : null,
+    soldAt: status === 'COMPLETED' ? createdAt : null,
+    soldBy: status === 'COMPLETED' ? { id: 'demo-admin', name: 'Administrator' } : null
   };
 }

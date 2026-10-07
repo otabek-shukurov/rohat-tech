@@ -3,11 +3,15 @@ import { DeliveryMethod, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { CurrentUser } from '../security/current-user.decorator';
 import { JwtAuthGuard } from '../security/auth.guard';
+import { OrdersService } from './orders.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly orders: OrdersService
+  ) {}
 
   @Get()
   list(@CurrentUser() user: { id: string }) {
@@ -36,11 +40,25 @@ export class OrdersController {
       customerNote?: string;
     }
   ) {
-    const cart = await this.prisma.cart.findUnique({
+    const [cart, customer] = await Promise.all([
+      this.prisma.cart.findUnique({
       where: { userId: user.id },
       include: { items: { include: { product: true } } }
-    });
+      }),
+      this.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { name: true, phone: true }
+      })
+    ]);
     if (!cart?.items.length) throw new BadRequestException('Savat bo‘sh');
+    if (!customer?.phone) throw new BadRequestException('Profilga telefon raqamini kiriting');
+    const customerPhone = customer.phone;
+
+    for (const item of cart.items) {
+      if (!item.product.isActive || item.product.stock < item.quantity) {
+        throw new BadRequestException(`${item.product.name} omborda yetarli emas`);
+      }
+    }
 
     const subtotal = cart.items.reduce((sum, item) => {
       const price = item.product.discountPrice ?? item.product.price;
@@ -50,10 +68,13 @@ export class OrdersController {
     const total = subtotal + deliveryFee;
 
     return this.prisma.$transaction(async (tx) => {
+      const orderNumber = await this.orders.nextOrderNumber(tx);
       const order = await tx.order.create({
         data: {
-          orderNumber: `RT-${Date.now()}`,
+          orderNumber,
           userId: user.id,
+          customerName: customer.name,
+          customerPhone,
           deliveryMethod: body.deliveryMethod,
           deliveryAddress: body.deliveryAddress,
           customerNote: body.customerNote,
@@ -82,15 +103,8 @@ export class OrdersController {
         include: { items: true, payment: true }
       });
 
-      for (const item of cart.items) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } }
-        });
-      }
-
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
       return order;
-    });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   }
 }

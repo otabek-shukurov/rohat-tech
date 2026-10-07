@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: rohat-tech-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run prisma:generate && npm run build -w apps/api && npx prisma migrate deploy --schema prisma/schema.prisma && npm run prisma:seed
+    startCommand: npm run start -w apps/api
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: WEB_ORIGIN
+        value: https://rohat-tech.netlify.app
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: ADMIN_EMAIL
+        value: admin@rohat.tech
+      - key: ADMIN_PASSWORD
+        sync: false

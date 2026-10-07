@@ -10,6 +10,7 @@ export type Product = {
   price: string;
   discountPrice?: string | null;
   stock: number;
+  isActive?: boolean;
   specs?: Record<string, string>;
   category: { id: string; name: string; slug: string };
   brand: { id: string; name: string; slug: string };
@@ -33,10 +34,14 @@ export function setToken(token: string) {
   window.localStorage.setItem('rohat_token', token);
 }
 
+export function clearToken() {
+  window.localStorage.removeItem('rohat_token');
+}
+
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = getToken();
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
+  const timeout = setTimeout(() => controller.abort(), 20000);
 
   try {
     const res = await fetch(`${API_URL}${path}`, {
