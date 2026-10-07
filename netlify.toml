@@ -7,4 +7,4 @@
 
 [build.environment]
   NODE_VERSION = "22"
-  NEXT_PUBLIC_DEMO_MODE = "false"
+  NEXT_PUBLIC_ORDER_ENDPOINT = "/.netlify/functions/telegram-order"

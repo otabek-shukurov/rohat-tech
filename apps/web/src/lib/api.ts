@@ -1,6 +1,6 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
-export const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+export const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE !== 'false';
 
 export type Product = {
   id: string;
