@@ -3,7 +3,7 @@ services:
     name: rohat-tech-api
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run prisma:generate && npm run build -w apps/api && npx prisma migrate deploy --schema prisma/schema.prisma && npm run prisma:seed
+    buildCommand: npm ci --include=dev && npm run prisma:generate && npm run build -w apps/api && npx prisma migrate deploy --schema prisma/schema.prisma && npm run prisma:seed
     startCommand: npm run start -w apps/api
     healthCheckPath: /api/health
     envVars:
