@@ -19,6 +19,11 @@ exports.handler = async function handler(event) {
     return response(400, { message: error instanceof Error ? error.message : 'Buyurtma ma’lumoti noto‘g‘ri' });
   }
 
+  const orderApiUrl = process.env.ORDER_API_URL;
+  if (orderApiUrl) {
+    return forwardToOrderApi(orderApiUrl, order);
+  }
+
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!botToken || !chatId) {
@@ -71,6 +76,35 @@ exports.handler = async function handler(event) {
     orderedAt: orderedAt.toISOString()
   });
 };
+
+async function forwardToOrderApi(url, order) {
+  let apiResponse;
+  try {
+    apiResponse = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        productId: order.productId,
+        quantity: order.quantity,
+        fullName: order.fullName,
+        phone: order.phone
+      })
+    });
+  } catch (error) {
+    console.error(`Order API connection failed: ${error instanceof Error ? error.message : 'unknown error'}`);
+    return response(503, { message: 'Buyurtma serveriga ulanib bo‘lmadi. Iltimos, qayta urinib ko‘ring.' });
+  }
+
+  const result = await apiResponse.json().catch(() => null);
+  if (!apiResponse.ok) {
+    console.error(`Order API failed (${apiResponse.status}): ${JSON.stringify(result).slice(0, 500)}`);
+    return response(apiResponse.status, {
+      message: result?.message ?? 'Buyurtmani saqlab bo‘lmadi. Iltimos, qayta urinib ko‘ring.'
+    });
+  }
+
+  return response(200, result);
+}
 
 function validateOrder(input) {
   const fullName = cleanText(input.fullName, 80);
@@ -153,3 +187,4 @@ function response(statusCode, body, extraHeaders = {}) {
 exports.validateOrder = validateOrder;
 exports.createOrderNumber = createOrderNumber;
 exports.createTelegramMessage = createTelegramMessage;
+exports.forwardToOrderApi = forwardToOrderApi;

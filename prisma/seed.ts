@@ -7,17 +7,19 @@ const image = (seed: string) =>
   `https://images.unsplash.com/${seed}?auto=format&fit=crop&w=1200&q=80`;
 
 async function main() {
+  const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@rohat.tech';
+  const adminPasswordValue = process.env.ADMIN_PASSWORD ?? 'Admin12345';
   const [adminPassword, customerPassword] = await Promise.all([
-    bcrypt.hash('Admin12345', 10),
+    bcrypt.hash(adminPasswordValue, 10),
     bcrypt.hash('Mijoz12345', 10)
   ]);
 
   await prisma.user.upsert({
-    where: { email: 'admin@rohat.tech' },
+    where: { email: adminEmail },
     update: {},
     create: {
       name: 'Rohat Admin',
-      email: 'admin@rohat.tech',
+      email: adminEmail,
       phone: '+998901112233',
       role: Role.ADMIN,
       password: adminPassword

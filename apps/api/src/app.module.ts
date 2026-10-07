@@ -7,7 +7,9 @@ import { AuthController } from './modules/auth.controller';
 import { AuthService } from './modules/auth.service';
 import { CartController } from './modules/cart.controller';
 import { CatalogController } from './modules/catalog.controller';
+import { GuestOrdersController } from './modules/guest-orders.controller';
 import { OrdersController } from './modules/orders.controller';
+import { OrdersService } from './modules/orders.service';
 import { PrismaService } from './prisma.service';
 import { JwtStrategy } from './security/jwt.strategy';
 import { RolesGuard } from './security/roles.guard';
@@ -26,9 +28,10 @@ import { RolesGuard } from './security/roles.guard';
     AuthController,
     CatalogController,
     CartController,
+    GuestOrdersController,
     OrdersController,
     AdminController
   ],
-  providers: [PrismaService, AuthService, JwtStrategy, RolesGuard]
+  providers: [PrismaService, AuthService, OrdersService, JwtStrategy, RolesGuard]
 })
 export class AppModule {}

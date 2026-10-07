@@ -1,14 +1,19 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { OrderStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
+import { CurrentUser } from '../security/current-user.decorator';
 import { JwtAuthGuard } from '../security/auth.guard';
 import { Roles, RolesGuard } from '../security/roles.guard';
+import { OrdersService } from './orders.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly ordersService: OrdersService
+  ) {}
 
   @Get('dashboard')
   async dashboard() {
@@ -17,13 +22,13 @@ export class AdminController {
       this.prisma.product.count(),
       this.prisma.user.count({ where: { role: 'CUSTOMER' } }),
       this.prisma.order.aggregate({
-        where: { status: { not: 'CANCELLED' } },
+        where: { soldAt: { not: null } },
         _sum: { total: true }
       })
     ]);
     const latestOrders = await this.prisma.order.findMany({
       take: 6,
-      include: { user: { select: { name: true, phone: true } }, items: true },
+      include: { user: { select: { name: true, phone: true } }, items: true, payment: true },
       orderBy: { createdAt: 'desc' }
     });
     return {
@@ -48,7 +53,7 @@ export class AdminController {
   @Post('products')
   createProduct(@Body() body: ProductBody) {
     return this.prisma.product.create({
-      data: this.productData(body),
+      data: this.productData(body, false),
       include: { category: true, brand: true, images: true }
     });
   }
@@ -57,7 +62,7 @@ export class AdminController {
   updateProduct(@Param('id') id: string, @Body() body: Partial<ProductBody>) {
     return this.prisma.product.update({
       where: { id },
-      data: this.productData(body),
+      data: this.productData(body, true),
       include: { category: true, brand: true, images: true }
     });
   }
@@ -109,15 +114,21 @@ export class AdminController {
 
   @Get('orders')
   orders() {
-    return this.prisma.order.findMany({
-      include: { user: { select: { name: true, phone: true, email: true } }, items: true, payment: true },
-      orderBy: { createdAt: 'desc' }
-    });
+    return this.ordersService.listAdminOrders();
   }
 
   @Patch('orders/:id/status')
   updateOrderStatus(@Param('id') id: string, @Body() body: { status: OrderStatus }) {
-    return this.prisma.order.update({ where: { id }, data: { status: body.status } });
+    return this.ordersService.updateStatus(id, body.status);
+  }
+
+  @Post('orders/:id/mark-sold')
+  markOrderSold(
+    @CurrentUser() user: { id: string },
+    @Param('id') id: string,
+    @Body() body: { method?: string }
+  ) {
+    return this.ordersService.markSold(id, user.id, body.method ?? 'cash');
   }
 
   @Get('customers')
@@ -159,15 +170,24 @@ export class AdminController {
 
   @Get('reports')
   async reports() {
-    const byStatus = await this.prisma.order.groupBy({
-      by: ['status'],
-      _count: { id: true },
-      _sum: { total: true }
-    });
-    return { byStatus };
+    const [byStatus, sales] = await Promise.all([
+      this.prisma.order.groupBy({
+        by: ['status'],
+        _count: { id: true }
+      }),
+      this.prisma.order.aggregate({
+        where: { soldAt: { not: null } },
+        _count: { id: true },
+        _sum: { total: true }
+      })
+    ]);
+    return {
+      byStatus,
+      sales: { count: sales._count.id, revenue: Number(sales._sum.total ?? 0) }
+    };
   }
 
-  private productData(body: Partial<ProductBody>): any {
+  private productData(body: Partial<ProductBody>, replaceImage: boolean): any {
     return {
       name: body.name,
       slug: body.slug,
@@ -183,7 +203,7 @@ export class AdminController {
       brandId: body.brandId,
       images: body.imageUrl
         ? {
-            deleteMany: {},
+            ...(replaceImage ? { deleteMany: {} } : {}),
             create: [{ url: body.imageUrl, alt: body.name, position: 0 }]
           }
         : undefined

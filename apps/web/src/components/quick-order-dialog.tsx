@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckCircle2, Minus, Phone, Plus, ShoppingBag, UserRound, X } from 'lucide-react';
-import { Product } from '@/lib/api';
+import { Product, api, isDemoMode } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn, formatPrice } from '@/lib/utils';
@@ -91,6 +91,12 @@ export function QuickOrderDialog({ product, open, onClose }: QuickOrderDialogPro
         const result = await response.json().catch(() => null) as { message?: string; orderNumber?: string } | null;
         if (!response.ok) throw new Error(result?.message ?? 'Buyurtmani yuborib bo‘lmadi');
         setOrderNumber(result?.orderNumber ?? '');
+      } else if (!isDemoMode) {
+        const result = await api<{ orderNumber: string }>('/orders/guest', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        setOrderNumber(result.orderNumber);
       } else {
         await new Promise((resolve) => window.setTimeout(resolve, 450));
         setOrderNumber('TEST-ORDER');

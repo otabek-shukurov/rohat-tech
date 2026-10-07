@@ -44,7 +44,8 @@ model User {
   address   String?
   favorites Favorite[]
   cart      Cart?
-  orders    Order[]
+  orders    Order[]    @relation("CustomerOrders")
+  sales     Order[]    @relation("CompletedSales")
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -152,8 +153,10 @@ model CartItem {
 model Order {
   id             String         @id @default(cuid())
   orderNumber    String         @unique
-  userId         String
-  user           User           @relation(fields: [userId], references: [id])
+  userId         String?
+  user           User?          @relation("CustomerOrders", fields: [userId], references: [id], onDelete: SetNull)
+  customerName   String
+  customerPhone  String
   status         OrderStatus    @default(PENDING)
   deliveryMethod DeliveryMethod
   deliveryAddress String?
@@ -164,10 +167,15 @@ model Order {
   total          Decimal        @db.Decimal(12, 2)
   items          OrderItem[]
   payment        Payment?
+  soldAt         DateTime?
+  soldById       String?
+  soldBy         User?          @relation("CompletedSales", fields: [soldById], references: [id], onDelete: SetNull)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
   @@index([userId])
+  @@index([soldAt])
+  @@index([soldById])
   @@map("orders")
 }
 
@@ -192,10 +200,19 @@ model Payment {
   method    String        @default("cash")
   status    PaymentStatus @default(PENDING)
   amount    Decimal       @db.Decimal(12, 2)
+  paidAt    DateTime?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
   @@map("payments")
+}
+
+model Counter {
+  key       String   @id
+  value     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@map("counters")
 }
 
 model Promotion {
