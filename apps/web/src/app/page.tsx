@@ -8,6 +8,7 @@ import {
   ArrowRight,
   ChevronRight,
   Plus,
+  RefreshCw,
   ShoppingBag
 } from 'lucide-react';
 import { BrandMarquee } from '@/components/brand-marquee';
@@ -54,17 +55,24 @@ const LOAD_MORE_COUNT = 20;
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>(isDemoMode ? demoProducts : []);
   const [loading, setLoading] = useState(!isDemoMode);
+  const [loadError, setLoadError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
   const [activeSlide, setActiveSlide] = useState(0);
   const [visibleCount, setVisibleCount] = useState(INITIAL_PRODUCT_COUNT);
 
   useEffect(() => {
     if (isDemoMode) return;
 
+    setLoading(true);
+    setLoadError('');
     api<Product[]>('/products')
       .then(setProducts)
-      .catch(() => setProducts([]))
+      .catch(() => {
+        setProducts([]);
+        setLoadError('Server uyg‘onishi biroz vaqt olishi mumkin. Qayta urinib ko‘ring.');
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [reloadKey]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % heroSlides.length), 6500);
@@ -177,10 +185,14 @@ export default function HomePage() {
             </>
           ) : (
             <ScrollReveal variant="scale" className="flex flex-col items-center rounded-lg border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-              <ShoppingBag className="h-8 w-8 text-blue-600" />
-              <h3 className="mt-3 font-semibold text-slate-900">Mahsulotlar katalogda ko‘rinadi</h3>
-              <p className="mt-1 max-w-md text-sm text-slate-500">Eng so‘nggi takliflar va yangi modellarni katalogdan ko‘ring.</p>
-              <Button asChild variant="outline" className="mt-5"><Link href="/catalog">Katalogni ochish</Link></Button>
+              {loadError ? <RefreshCw className="h-8 w-8 text-blue-600" /> : <ShoppingBag className="h-8 w-8 text-blue-600" />}
+              <h3 className="mt-3 font-semibold text-slate-900">{loadError ? 'Mahsulotlarni yuklab bo‘lmadi' : 'Mahsulotlar katalogda ko‘rinadi'}</h3>
+              <p className="mt-1 max-w-md text-sm text-slate-500">{loadError || 'Eng so‘nggi takliflar va yangi modellarni katalogdan ko‘ring.'}</p>
+              {loadError ? (
+                <Button type="button" variant="outline" className="mt-5" onClick={() => setReloadKey((key) => key + 1)}><RefreshCw className="h-4 w-4" /> Qayta urinish</Button>
+              ) : (
+                <Button asChild variant="outline" className="mt-5"><Link href="/catalog">Katalogni ochish</Link></Button>
+              )}
             </ScrollReveal>
           )}
         </div>

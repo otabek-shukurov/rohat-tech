@@ -1,4 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+const API_TIMEOUT_MS = 65000;
 
 export const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE !== 'false';
 
@@ -41,7 +42,7 @@ export function clearToken() {
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = getToken();
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20000);
+  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
   try {
     const res = await fetch(`${API_URL}${path}`, {

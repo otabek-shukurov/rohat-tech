@@ -43,6 +43,8 @@ export function QuickOrderDialog({ product, open, onClose }: QuickOrderDialogPro
     setOrderNumber('');
     setError('');
 
+    if (!isDemoMode) void api('/health').catch(() => undefined);
+
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -81,6 +83,8 @@ export function QuickOrderDialog({ product, open, onClose }: QuickOrderDialogPro
     };
 
     try {
+      if (!isDemoMode) await api('/health');
+
       const endpoint = process.env.NEXT_PUBLIC_ORDER_ENDPOINT;
       if (endpoint) {
         const response = await fetch(endpoint, {
@@ -103,7 +107,10 @@ export function QuickOrderDialog({ product, open, onClose }: QuickOrderDialogPro
       }
       setSubmitted(true);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Xatolik yuz berdi');
+      const message = submitError instanceof Error ? submitError.message : '';
+      setError(message === 'Failed to fetch' || submitError instanceof TypeError
+        ? 'Server bilan ulanish tiklanmoqda. Bir ozdan so‘ng qayta yuboring.'
+        : message || 'Xatolik yuz berdi');
     } finally {
       setSubmitting(false);
     }
