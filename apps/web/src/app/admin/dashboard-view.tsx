@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   Boxes,
   CircleDollarSign,
+  Loader2,
   PackagePlus,
   ReceiptText,
   RotateCcw,
@@ -16,6 +17,7 @@ import {
   Users
 } from 'lucide-react';
 import { OrderStatusBadge } from '@/components/admin/order-status-badge';
+import { ProductFormDialog } from '@/components/admin/product-form-dialog';
 import { Button } from '@/components/ui/button';
 import { type AdminOrder, demoAdminOrders } from '@/lib/admin-demo';
 import { api, isDemoMode } from '@/lib/api';
@@ -75,6 +77,7 @@ export default function DashboardView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [todayLabel, setTodayLabel] = useState('');
+  const [productFormOpen, setProductFormOpen] = useState(false);
 
   useEffect(() => {
     setTodayLabel(formatUzbekDate(new Date()));
@@ -87,8 +90,8 @@ export default function DashboardView() {
     const request: Promise<unknown> = isDemoMode
       ? Promise.resolve(createDemoDashboard(period))
       : api<unknown>(`/admin/dashboard?period=${period}`);
-    request
-      .then((result) => {
+    Promise.all([request, wait(350)])
+      .then(([result]) => {
         if (!isDashboardData(result)) {
           throw new Error('Dashboard API hali yangi formatga yangilanmagan. Backend deploy tugagach qayta urinib ko‘ring.');
         }
@@ -124,14 +127,18 @@ export default function DashboardView() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="scrollbar-hidden flex max-w-full overflow-x-auto rounded-md border border-slate-200 bg-white p-1" role="tablist" aria-label="Statistika davri">
             {periods.map((item) => (
-              <button key={item.value} type="button" role="tab" aria-selected={period === item.value} onClick={() => setPeriod(item.value)} className={cn('min-h-9 shrink-0 rounded px-3 text-xs font-bold transition', period === item.value ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900')}>{item.label}</button>
+              <button key={item.value} type="button" role="tab" aria-selected={period === item.value} onClick={() => item.value !== period && setPeriod(item.value)} className={cn('min-h-9 shrink-0 rounded px-3 text-xs font-bold transition', period === item.value ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900')}>{item.label}</button>
             ))}
           </div>
-          <Button asChild><Link href="/admin/products"><PackagePlus className="h-4 w-4" />Mahsulot qo‘shish</Link></Button>
+          <Button type="button" onClick={() => setProductFormOpen(true)}><PackagePlus className="h-4 w-4" />Mahsulot qo‘shish</Button>
         </div>
       </div>
 
       {error ? <div className="mt-5 flex items-center justify-between gap-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"><span>{error}</span><button type="button" onClick={() => setReloadKey((key) => key + 1)} className="font-bold">Qayta urinish</button></div> : null}
+
+      {loading && dashboard ? <div className="mt-5 flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800" role="status" aria-live="polite"><Loader2 className="h-4 w-4 animate-spin" /><span>{periods.find((item) => item.value === period)?.label} statistika yangilanmoqda...</span><span className="ml-auto hidden text-xs font-medium text-blue-600 sm:inline">Chartlar yangi ma’lumot bilan almashtiriladi</span></div> : null}
+
+      <div className={cn('transition-[opacity,filter] duration-300', loading && dashboard && 'pointer-events-none opacity-45 saturate-50')} aria-busy={loading}>
 
       <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6" aria-label="Asosiy ko‘rsatkichlar">
         {loading && !dashboard ? Array.from({ length: 6 }, (_, index) => <div key={index} className="h-32 animate-pulse rounded-lg bg-slate-200" />) : stats.map((stat) => (
@@ -164,6 +171,9 @@ export default function DashboardView() {
           <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]"><RecentOrders orders={dashboard.recentOrders} /><LowStock products={dashboard.inventory.lowStockProducts} /></div>
         </>
       ) : null}
+      </div>
+
+      <ProductFormDialog open={productFormOpen} onClose={() => setProductFormOpen(false)} onSaved={() => setReloadKey((key) => key + 1)} />
     </div>
   );
 }
@@ -178,6 +188,10 @@ function TrendBadge({ value, reverse = false }: { value?: number; reverse?: bool
 
 function SectionHeader({ title, description, value }: { title: string; description: string; value: string }) {
   return <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-sm font-bold text-slate-950">{title}</h2><p className="mt-1 text-xs text-slate-500">{description}</p></div><div className="flex items-center gap-2 text-sm font-bold text-slate-950"><TrendingUp className="h-4 w-4 text-emerald-600" />{value}</div></div>;
+}
+
+function wait(milliseconds: number) {
+  return new Promise<void>((resolve) => window.setTimeout(resolve, milliseconds));
 }
 
 function RevenueChart({ series }: { series: DashboardData['series'] }) {

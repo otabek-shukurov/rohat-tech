@@ -43,12 +43,13 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = getToken();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData;
 
   try {
     const res = await fetch(`${API_URL}${path}`, {
       ...init,
       headers: {
-        'Content-Type': 'application/json',
+        ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...init.headers
       },

@@ -1,11 +1,11 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { Minus, Plus, ShoppingCart, Trash2, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { EmptyState } from '@/components/empty-state';
 import { PageHeading } from '@/components/page-heading';
+import { ProductImage } from '@/components/product-image';
 import { Button } from '@/components/ui/button';
 import { Product, api } from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
@@ -45,7 +45,7 @@ export default function CartPage() {
                 const image = item.product.images[0]?.url ?? '/images/rohat-tech-hero.png';
                 return (
                   <article key={item.id} className="grid gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[128px_minmax(0,1fr)_auto] sm:items-center">
-                    <Link href={`/products/${item.product.slug}`} className="relative aspect-square overflow-hidden rounded-md bg-slate-50"><Image src={image} alt={item.product.name} fill sizes="128px" className="object-contain p-3" /></Link>
+                    <Link href={`/products/${item.product.slug}`} className="relative aspect-square overflow-hidden rounded-md bg-slate-50"><ProductImage src={image} alt={item.product.name} className="object-contain p-3" /></Link>
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-slate-500">{item.product.brand.name}</p>
                       <Link href={`/products/${item.product.slug}`} className="mt-1 line-clamp-2 font-semibold text-slate-950 transition hover:text-blue-700">{item.product.name}</Link>

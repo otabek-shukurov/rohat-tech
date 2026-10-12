@@ -11,6 +11,7 @@ import { GuestOrdersController } from './modules/guest-orders.controller';
 import { DashboardService } from './modules/dashboard.service';
 import { OrdersController } from './modules/orders.controller';
 import { OrdersService } from './modules/orders.service';
+import { StorageService } from './modules/storage.service';
 import { PrismaService } from './prisma.service';
 import { JwtStrategy } from './security/jwt.strategy';
 import { RolesGuard } from './security/roles.guard';
@@ -33,6 +34,6 @@ import { RolesGuard } from './security/roles.guard';
     OrdersController,
     AdminController
   ],
-  providers: [PrismaService, AuthService, OrdersService, DashboardService, JwtStrategy, RolesGuard]
+  providers: [PrismaService, AuthService, OrdersService, DashboardService, StorageService, JwtStrategy, RolesGuard]
 })
 export class AppModule {}

@@ -1,10 +1,10 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { Check, Heart, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
 import { QuickOrderDialog } from '@/components/quick-order-dialog';
+import { ProductImage } from '@/components/product-image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Product, api, isDemoMode } from '@/lib/api';
@@ -62,7 +62,7 @@ export function ProductCard({ product }: { product: Product }) {
       <article className="group relative flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_16px_40px_rgba(15,23,42,0.09)]">
         <Link href={`/products/${product.slug}`} className="block">
           <div className="relative aspect-square bg-slate-50 p-6">
-            <Image src={image} alt={product.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className={cn('transition-transform duration-500 group-hover:scale-[1.03]', isLifestyleImage ? 'object-cover' : 'object-contain p-5')} />
+            <ProductImage src={image} alt={product.name} className={cn('transition-transform duration-500 group-hover:scale-[1.03]', isLifestyleImage ? 'object-cover' : 'object-contain p-5')} />
             {product.discountPrice ? <Badge className="absolute left-3 top-3 bg-red-50 text-red-700">Chegirma</Badge> : null}
           </div>
         </Link>

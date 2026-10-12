@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -8,6 +7,7 @@ import { Check, Heart, PackageCheck, ShieldCheck, ShoppingBag, ShoppingCart, Tru
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { QuickOrderDialog } from '@/components/quick-order-dialog';
+import { ProductImage } from '@/components/product-image';
 import { Product, api, isDemoMode } from '@/lib/api';
 import { findDemoProduct } from '@/lib/demo-catalog';
 import { formatPrice } from '@/lib/utils';
@@ -83,10 +83,10 @@ export default function ProductPage() {
         <div className="grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12">
           <section>
             <div className="relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-              <Image src={activeImage} alt={images[selectedImage]?.alt ?? product.name} fill priority sizes="(max-width: 1024px) 100vw, 55vw" className={activeImageIsRemotePhoto ? 'object-cover' : 'object-contain p-7 md:p-10'} />
+              <ProductImage src={activeImage} alt={images[selectedImage]?.alt ?? product.name} priority className={activeImageIsRemotePhoto ? 'object-cover' : 'object-contain p-7 md:p-10'} />
               {product.discountPrice ? <Badge className="absolute left-4 top-4 bg-red-50 px-3 py-1.5 text-red-700">Maxsus narx</Badge> : null}
             </div>
-            {images.length > 1 ? <div className="mt-3 flex gap-3 overflow-x-auto pb-1">{images.map((image, index) => <button key={image.id} type="button" onClick={() => setSelectedImage(index)} className={cn('relative h-20 w-20 shrink-0 overflow-hidden rounded-md border bg-slate-50 transition', selectedImage === index ? 'border-blue-600 ring-2 ring-blue-100' : 'border-slate-200 hover:border-slate-400')} aria-label={`${index + 1}-rasm`}><Image src={image.url} alt="" fill sizes="80px" className="object-contain p-2" /></button>)}</div> : null}
+            {images.length > 1 ? <div className="mt-3 flex gap-3 overflow-x-auto pb-1">{images.map((image, index) => <button key={image.id} type="button" onClick={() => setSelectedImage(index)} className={cn('relative h-20 w-20 shrink-0 overflow-hidden rounded-md border bg-slate-50 transition', selectedImage === index ? 'border-blue-600 ring-2 ring-blue-100' : 'border-slate-200 hover:border-slate-400')} aria-label={`${index + 1}-rasm`}><ProductImage src={image.url} alt="" className="object-contain p-2" /></button>)}</div> : null}
           </section>
 
           <section className="lg:pt-2">

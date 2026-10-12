@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { OrderStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { CurrentUser } from '../security/current-user.decorator';
@@ -6,6 +7,7 @@ import { JwtAuthGuard } from '../security/auth.guard';
 import { Roles, RolesGuard } from '../security/roles.guard';
 import { DashboardService } from './dashboard.service';
 import { OrdersService } from './orders.service';
+import { StorageService } from './storage.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
@@ -14,7 +16,8 @@ export class AdminController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ordersService: OrdersService,
-    private readonly dashboardService: DashboardService
+    private readonly dashboardService: DashboardService,
+    private readonly storageService: StorageService
   ) {}
 
   @Get('dashboard')
@@ -32,6 +35,7 @@ export class AdminController {
 
   @Post('products')
   createProduct(@Body() body: ProductBody) {
+    this.validateProductBody(body, false);
     return this.prisma.product.create({
       data: this.productData(body, false),
       include: { category: true, brand: true, images: true }
@@ -40,6 +44,7 @@ export class AdminController {
 
   @Patch('products/:id')
   updateProduct(@Param('id') id: string, @Body() body: Partial<ProductBody>) {
+    this.validateProductBody(body, true);
     return this.prisma.product.update({
       where: { id },
       data: this.productData(body, true),
@@ -109,6 +114,15 @@ export class AdminController {
     @Body() body: { method?: string }
   ) {
     return this.ordersService.markSold(id, user.id, body.method ?? 'cash');
+  }
+
+  @Post('uploads/product-image')
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 5 * 1024 * 1024, files: 1 }
+  }))
+  uploadProductImage(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Rasm fayli tanlanmagan');
+    return this.storageService.uploadProductImage(file);
   }
 
   @Post('orders/:id/mark-returned')
@@ -202,6 +216,47 @@ export class AdminController {
           }
         : undefined
     };
+  }
+
+  private validateProductBody(body: Partial<ProductBody>, partial: boolean) {
+    const requiredTextFields: Array<keyof ProductBody> = ['name', 'slug', 'description', 'categoryId', 'brandId'];
+    for (const field of requiredTextFields) {
+      if ((!partial || body[field] !== undefined) && (typeof body[field] !== 'string' || !String(body[field]).trim())) {
+        throw new BadRequestException(`${field} maydoni to‘ldirilishi kerak`);
+      }
+    }
+
+    if ((!partial || body.slug !== undefined) && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(body.slug ?? '')) {
+      throw new BadRequestException('Slug faqat kichik lotin harflari, raqam va chiziqchadan iborat bo‘lishi kerak');
+    }
+
+    if (!partial || body.price !== undefined) {
+      const price = Number(body.price);
+      if (!Number.isFinite(price) || price <= 0) throw new BadRequestException('Narx 0 dan katta bo‘lishi kerak');
+    }
+    if (body.discountPrice !== undefined && body.discountPrice !== null) {
+      const discountPrice = Number(body.discountPrice);
+      if (!Number.isFinite(discountPrice) || discountPrice <= 0) throw new BadRequestException('Chegirma narxi 0 dan katta bo‘lishi kerak');
+      if (body.price !== undefined && discountPrice >= Number(body.price)) throw new BadRequestException('Chegirma narxi asosiy narxdan kichik bo‘lishi kerak');
+    }
+    if (!partial || body.stock !== undefined) {
+      const stock = Number(body.stock);
+      if (!Number.isInteger(stock) || stock < 0) throw new BadRequestException('Ombordagi son 0 yoki undan katta butun son bo‘lishi kerak');
+    }
+
+    if (!partial && !body.imageUrl) throw new BadRequestException('Mahsulot rasmi kiritilishi kerak');
+    if (body.imageUrl) {
+      let imageUrl: URL;
+      try {
+        imageUrl = new URL(body.imageUrl);
+      } catch {
+        throw new BadRequestException('Rasm URL noto‘g‘ri formatda');
+      }
+      if (!['http:', 'https:'].includes(imageUrl.protocol)) throw new BadRequestException('Rasm URL HTTP yoki HTTPS bo‘lishi kerak');
+    }
+    if (body.specs !== undefined && (typeof body.specs !== 'object' || body.specs === null || Array.isArray(body.specs))) {
+      throw new BadRequestException('Texnik xususiyatlar obyekt ko‘rinishida bo‘lishi kerak');
+    }
   }
 }
 
