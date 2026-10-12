@@ -84,18 +84,23 @@ export default function DashboardView() {
     let active = true;
     setLoading(true);
     setError('');
-    const request = isDemoMode
+    const request: Promise<unknown> = isDemoMode
       ? Promise.resolve(createDemoDashboard(period))
-      : api<DashboardData>(`/admin/dashboard?period=${period}`);
+      : api<unknown>(`/admin/dashboard?period=${period}`);
     request
-      .then((result) => active && setDashboard(result))
+      .then((result) => {
+        if (!isDashboardData(result)) {
+          throw new Error('Dashboard API hali yangi formatga yangilanmagan. Backend deploy tugagach qayta urinib ko‘ring.');
+        }
+        if (active) setDashboard(result);
+      })
       .catch((reason) => active && setError(reason instanceof Error ? reason.message : 'Statistikani yuklab bo‘lmadi'))
       .finally(() => active && setLoading(false));
     return () => { active = false; };
   }, [period, reloadKey]);
 
   const rangeLabel = useMemo(() => {
-    if (!dashboard) return '';
+    if (!dashboard?.range?.start || !dashboard.range.end) return '';
     return `${formatUzbekShortDate(new Date(dashboard.range.start))} — ${formatUzbekShortDate(new Date(dashboard.range.end))}`;
   }, [dashboard]);
 
@@ -240,6 +245,24 @@ function createDemoDashboard(period: Period): DashboardData {
   const series = base.slice(0, count).map((value, index) => ({ key: String(index), label: `${index + 1}`, revenue: value * 1250000, sales: value, orders: value + 2, returns: index % 5 === 0 ? 1 : 0 }));
   const revenue = series.reduce((sum, item) => sum + item.revenue, 0);
   return { period, periodLabel: periods.find((item) => item.value === period)?.label ?? '', range: { start: new Date(Date.now() - 30 * 86400000).toISOString(), end: new Date().toISOString() }, stats: { netRevenue: revenue, grossRevenue: revenue + 1490000, returnedRevenue: 1490000, sales: series.reduce((sum, item) => sum + item.sales, 0), newOrders: series.reduce((sum, item) => sum + item.orders, 0), returns: series.reduce((sum, item) => sum + item.returns, 0), customers: 24, averageOrder: 4850000, trends: { netRevenue: 12.4, sales: 8.2, newOrders: 6.1, customers: 5.6, averageOrder: 3.8, returns: -2.5 } }, inventory: { products: demoProducts.length, totalUnits: demoProducts.reduce((sum, product) => sum + product.stock, 0), lowStock: demoProducts.filter((product) => product.stock <= 5).length, outOfStock: demoProducts.filter((product) => product.stock === 0).length, lowStockProducts: demoProducts.slice(0, 6).map((product) => ({ id: product.id, name: product.name, stock: product.stock, category: { name: product.category.name }, brand: { name: product.brand.name } })) }, status: { new: 5, sold: 18, returned: 2 }, series, topProducts: demoProducts.slice(0, 6).map((product, index) => ({ productId: product.id, name: product.name, units: 8 - index, revenue: Number(product.discountPrice ?? product.price) * (8 - index) })), recentOrders: demoAdminOrders };
+}
+
+function isDashboardData(value: unknown): value is DashboardData {
+  if (!isRecord(value) || !isRecord(value.range) || !isRecord(value.stats) || !isRecord(value.inventory) || !isRecord(value.status)) {
+    return false;
+  }
+  return typeof value.range.start === 'string'
+    && typeof value.range.end === 'string'
+    && typeof value.period === 'string'
+    && typeof value.periodLabel === 'string'
+    && typeof value.stats.netRevenue === 'number'
+    && Array.isArray(value.series)
+    && Array.isArray(value.topProducts)
+    && Array.isArray(value.recentOrders);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
 function formatCompactPrice(value: number) {
