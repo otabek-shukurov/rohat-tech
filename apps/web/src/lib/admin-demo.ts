@@ -1,13 +1,6 @@
 import { demoProducts } from '@/lib/demo-catalog';
 
-export type AdminOrderStatus =
-  | 'PENDING'
-  | 'CONFIRMED'
-  | 'PROCESSING'
-  | 'READY'
-  | 'DELIVERING'
-  | 'COMPLETED'
-  | 'CANCELLED';
+export type AdminOrderStatus = 'NEW' | 'SOLD' | 'RETURNED';
 
 export type AdminOrderItem = {
   id: string;
@@ -30,43 +23,41 @@ export type AdminOrder = {
   paymentMethod: string | null;
   soldAt: string | null;
   soldBy?: { id: string; name: string } | null;
+  returnedAt: string | null;
+  returnedBy?: { id: string; name: string } | null;
 };
 
 export const adminOrderStatuses: Array<{ value: AdminOrderStatus; label: string }> = [
-  { value: 'PENDING', label: 'Yangi' },
-  { value: 'CONFIRMED', label: 'Tasdiqlangan' },
-  { value: 'PROCESSING', label: 'Tayyorlanmoqda' },
-  { value: 'READY', label: 'Tayyor' },
-  { value: 'DELIVERING', label: 'Yo‘lda' },
-  { value: 'COMPLETED', label: 'Yakunlangan' },
-  { value: 'CANCELLED', label: 'Bekor qilingan' }
+  { value: 'NEW', label: 'Yangi' },
+  { value: 'SOLD', label: 'Sotildi' },
+  { value: 'RETURNED', label: 'Qaytarildi' }
 ];
 
 export const demoAdminOrders: AdminOrder[] = [
-  createOrder('127', 'PENDING', '2026-10-02T13:42:00+05:00', 'Jasur Hamroyev', '+998 90 527 14 28', 'Yetkazib berish', 'Vobkent, G‘ijduvon ko‘chasi 18', [
+  createOrder('127', 'NEW', '2026-10-02T13:42:00+05:00', 'Jasur Hamroyev', '+998 90 527 14 28', 'Yetkazib berish', 'Vobkent, G‘ijduvon ko‘chasi 18', [
     ['samsung-no-frost-345l', 'Samsung No Frost 345L', 1, 8190000]
   ]),
-  createOrder('126', 'CONFIRMED', '2026-10-02T12:18:00+05:00', 'Dilnoza Qodirova', '+998 93 614 08 42', 'Yetkazib berish', 'Vobkent, Mustaqillik ko‘chasi 7', [
+  createOrder('126', 'NEW', '2026-10-02T12:18:00+05:00', 'Dilnoza Qodirova', '+998 93 614 08 42', 'Yetkazib berish', 'Vobkent, Mustaqillik ko‘chasi 7', [
     ['philips-hd9350', 'Philips HD9350 1.7L', 1, 699000],
     ['tefal-toaster', 'Tefal Includeo Toaster', 1, 699000]
   ]),
-  createOrder('125', 'PROCESSING', '2026-10-02T10:55:00+05:00', 'Sarvar Alimov', '+998 91 450 33 27', 'Magazindan olib ketish', 'Rohat Tech, Vobkent filiali', [
+  createOrder('125', 'NEW', '2026-10-02T10:55:00+05:00', 'Sarvar Alimov', '+998 91 450 33 27', 'Magazindan olib ketish', 'Rohat Tech, Vobkent filiali', [
     ['lenovo-ideapad-slim-3', 'Lenovo IdeaPad Slim 3 15', 1, 6490000]
   ]),
-  createOrder('124', 'READY', '2026-10-01T18:27:00+05:00', 'Malika Rasulova', '+998 95 110 62 90', 'Yetkazib berish', 'Vobkent, Buxoro ko‘chasi 41', [
+  createOrder('124', 'NEW', '2026-10-01T18:27:00+05:00', 'Malika Rasulova', '+998 95 110 62 90', 'Yetkazib berish', 'Vobkent, Buxoro ko‘chasi 41', [
     ['artel-milagro-01-g', 'Artel Milagro 01-G', 1, 3990000]
   ]),
-  createOrder('123', 'DELIVERING', '2026-10-01T16:04:00+05:00', 'Shahzod Karimov', '+998 99 782 19 54', 'Yetkazib berish', 'Vobkent, Navoiy mahallasi 12', [
+  createOrder('123', 'SOLD', '2026-10-01T16:04:00+05:00', 'Shahzod Karimov', '+998 99 782 19 54', 'Yetkazib berish', 'Vobkent, Navoiy mahallasi 12', [
     ['lg-inverter-8kg', 'LG Inverter Direct Drive 8kg', 1, 5690000]
   ]),
-  createOrder('122', 'COMPLETED', '2026-10-01T11:36:00+05:00', 'Nodira Ergasheva', '+998 88 320 77 15', 'Yetkazib berish', 'Vobkent, Istiqlol ko‘chasi 23', [
+  createOrder('122', 'SOLD', '2026-10-01T11:36:00+05:00', 'Nodira Ergasheva', '+998 88 320 77 15', 'Yetkazib berish', 'Vobkent, Istiqlol ko‘chasi 23', [
     ['artel-smart-tv-55', 'Artel Smart TV 55 4K UHD', 1, 5990000],
     ['xiaomi-smart-fan', 'Xiaomi Smart Standing Fan 2', 1, 1190000]
   ]),
-  createOrder('121', 'COMPLETED', '2026-09-30T15:20:00+05:00', 'Asadbek Jo‘rayev', '+998 90 705 44 81', 'Magazindan olib ketish', 'Rohat Tech, Vobkent filiali', [
+  createOrder('121', 'SOLD', '2026-09-30T15:20:00+05:00', 'Asadbek Jo‘rayev', '+998 90 705 44 81', 'Magazindan olib ketish', 'Rohat Tech, Vobkent filiali', [
     ['bosch-climate-3000i-12', 'Bosch Climate 3000i 12', 1, 7290000]
   ]),
-  createOrder('120', 'CANCELLED', '2026-09-30T09:48:00+05:00', 'Mohira Safarova', '+998 97 230 16 68', 'Yetkazib berish', 'Vobkent, Do‘stlik ko‘chasi 5', [
+  createOrder('120', 'RETURNED', '2026-09-30T09:48:00+05:00', 'Mohira Safarova', '+998 97 230 16 68', 'Yetkazib berish', 'Vobkent, Do‘stlik ko‘chasi 5', [
     ['midea-air-fryer', 'Midea Air Fryer 5.5L', 1, 1490000]
   ])
 ];
@@ -81,7 +72,7 @@ export const weeklySales = [
   { label: 'Ya', value: 14600000 }
 ];
 
-const storageKey = 'rohat_admin_orders_v1';
+const storageKey = 'rohat_admin_orders_v2';
 
 export function loadAdminOrders(): AdminOrder[] {
   if (typeof window === 'undefined') return demoAdminOrders;
@@ -107,7 +98,7 @@ export function updateAdminOrderStatus(id: string, status: AdminOrderStatus) {
 export function markDemoOrderSold(id: string, paymentMethod: string) {
   const orders = loadAdminOrders().map((order) => order.id === id ? {
     ...order,
-    status: 'COMPLETED' as const,
+    status: 'SOLD' as const,
     paymentStatus: 'PAID' as const,
     paymentMethod,
     soldAt: new Date().toISOString(),
@@ -117,8 +108,20 @@ export function markDemoOrderSold(id: string, paymentMethod: string) {
   return orders;
 }
 
+export function markDemoOrderReturned(id: string) {
+  const orders = loadAdminOrders().map((order) => order.id === id ? {
+    ...order,
+    status: 'RETURNED' as const,
+    paymentStatus: 'REFUNDED' as const,
+    returnedAt: new Date().toISOString(),
+    returnedBy: { id: 'demo-admin', name: 'Administrator' }
+  } : order);
+  saveAdminOrders(orders);
+  return orders;
+}
+
 export function getAdminMetrics(orders: AdminOrder[]) {
-  const activeOrders = orders.filter((order) => !['COMPLETED', 'CANCELLED'].includes(order.status));
+  const activeOrders = orders.filter((order) => order.status === 'NEW');
   const revenue = orders.filter((order) => order.paymentStatus === 'PAID').reduce((sum, order) => sum + order.total, 0);
   const customers = new Set(orders.map((order) => order.customer.phone)).size;
   return { orders: orders.length, activeOrders: activeOrders.length, products: demoProducts.length, customers, revenue };
@@ -163,9 +166,11 @@ function createOrder(
     customer: { name, phone },
     items: normalizedItems,
     total: normalizedItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
-    paymentStatus: status === 'COMPLETED' ? 'PAID' : 'PENDING',
-    paymentMethod: status === 'COMPLETED' ? 'cash' : null,
-    soldAt: status === 'COMPLETED' ? createdAt : null,
-    soldBy: status === 'COMPLETED' ? { id: 'demo-admin', name: 'Administrator' } : null
+    paymentStatus: status === 'SOLD' ? 'PAID' : status === 'RETURNED' ? 'REFUNDED' : 'PENDING',
+    paymentMethod: status === 'NEW' ? null : 'cash',
+    soldAt: status === 'NEW' ? null : createdAt,
+    soldBy: status === 'NEW' ? null : { id: 'demo-admin', name: 'Administrator' },
+    returnedAt: status === 'RETURNED' ? createdAt : null,
+    returnedBy: status === 'RETURNED' ? { id: 'demo-admin', name: 'Administrator' } : null
   };
 }

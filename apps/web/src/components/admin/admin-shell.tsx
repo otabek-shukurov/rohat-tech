@@ -221,9 +221,6 @@ function Sidebar({ pathname }: { pathname: string }) {
                   >
                     <Icon className="h-[18px] w-[18px] shrink-0" />
                     <span className="truncate">{label}</span>
-                    {href === '/admin/orders' ? (
-                      <span className={cn('ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold', active ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700')}>5</span>
-                    ) : null}
                   </Link>
                 );
               })}

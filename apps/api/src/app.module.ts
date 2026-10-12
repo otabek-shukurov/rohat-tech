@@ -8,6 +8,7 @@ import { AuthService } from './modules/auth.service';
 import { CartController } from './modules/cart.controller';
 import { CatalogController } from './modules/catalog.controller';
 import { GuestOrdersController } from './modules/guest-orders.controller';
+import { DashboardService } from './modules/dashboard.service';
 import { OrdersController } from './modules/orders.controller';
 import { OrdersService } from './modules/orders.service';
 import { PrismaService } from './prisma.service';
@@ -32,6 +33,6 @@ import { RolesGuard } from './security/roles.guard';
     OrdersController,
     AdminController
   ],
-  providers: [PrismaService, AuthService, OrdersService, JwtStrategy, RolesGuard]
+  providers: [PrismaService, AuthService, OrdersService, DashboardService, JwtStrategy, RolesGuard]
 })
 export class AppModule {}

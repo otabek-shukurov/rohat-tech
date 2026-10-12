@@ -21,6 +21,7 @@ enum OrderStatus {
   DELIVERING
   COMPLETED
   CANCELLED
+  RETURNED
 }
 
 enum DeliveryMethod {
@@ -47,6 +48,7 @@ model User {
   cart      Cart?
   orders    Order[]    @relation("CustomerOrders")
   sales     Order[]    @relation("CompletedSales")
+  returns   Order[]    @relation("ReturnedSales")
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -171,12 +173,17 @@ model Order {
   soldAt         DateTime?
   soldById       String?
   soldBy         User?          @relation("CompletedSales", fields: [soldById], references: [id], onDelete: SetNull)
+  returnedAt     DateTime?
+  returnedById   String?
+  returnedBy     User?          @relation("ReturnedSales", fields: [returnedById], references: [id], onDelete: SetNull)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
   @@index([userId])
   @@index([soldAt])
   @@index([soldById])
+  @@index([returnedAt])
+  @@index([returnedById])
   @@map("orders")
 }
 

@@ -16,7 +16,8 @@ const orderInclude = {
   items: true,
   payment: true,
   user: { select: { name: true, phone: true, email: true } },
-  soldBy: { select: { id: true, name: true } }
+  soldBy: { select: { id: true, name: true } },
+  returnedBy: { select: { id: true, name: true } }
 } satisfies Prisma.OrderInclude;
 
 type OrderWithDetails = Prisma.OrderGetPayload<{ include: typeof orderInclude }>;
@@ -114,6 +115,9 @@ export class OrdersService {
     if (status === OrderStatus.COMPLETED) {
       throw new BadRequestException('Sotuvni yakunlash uchun “Sotildi” amalidan foydalaning');
     }
+    if (status === OrderStatus.RETURNED) {
+      throw new BadRequestException('Qaytarish uchun “Qaytarildi” amalidan foydalaning');
+    }
 
     const current = await this.prisma.order.findUnique({ where: { id } });
     if (!current) throw new NotFoundException('Buyurtma topilmadi');
@@ -138,6 +142,7 @@ export class OrdersService {
         include: { items: true, payment: true }
       });
       if (!current) throw new NotFoundException('Buyurtma topilmadi');
+      if (current.returnedAt) throw new ConflictException('Qaytarilgan buyurtmani qayta sotib bo‘lmaydi');
       if (current.soldAt) {
         return tx.order.findUniqueOrThrow({ where: { id }, include: orderInclude });
       }
@@ -182,6 +187,47 @@ export class OrdersService {
     return this.toAdminOrder(order);
   }
 
+  async markReturned(id: string, adminId: string) {
+    const order = await this.prisma.$transaction(async (tx) => {
+      const current = await tx.order.findUnique({
+        where: { id },
+        include: { items: true, payment: true }
+      });
+      if (!current) throw new NotFoundException('Buyurtma topilmadi');
+      if (current.returnedAt) {
+        return tx.order.findUniqueOrThrow({ where: { id }, include: orderInclude });
+      }
+      if (!current.soldAt || current.payment?.status !== PaymentStatus.PAID) {
+        throw new ConflictException('Faqat sotilgan va to‘langan buyurtma qaytariladi');
+      }
+
+      for (const item of current.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { increment: item.quantity } }
+        });
+      }
+
+      const returnedAt = new Date();
+      await tx.payment.update({
+        where: { orderId: id },
+        data: { status: PaymentStatus.REFUNDED }
+      });
+
+      return tx.order.update({
+        where: { id },
+        data: {
+          status: OrderStatus.RETURNED,
+          returnedAt,
+          returnedById: adminId
+        },
+        include: orderInclude
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+    return this.toAdminOrder(order);
+  }
+
   async nextOrderNumber(tx: Prisma.TransactionClient) {
     const counter = await tx.counter.upsert({
       where: { key: 'orders' },
@@ -195,7 +241,7 @@ export class OrdersService {
     return {
       id: order.id,
       orderNumber: order.orderNumber,
-      status: order.status,
+      status: order.returnedAt ? 'RETURNED' : order.soldAt ? 'SOLD' : 'NEW',
       createdAt: order.createdAt,
       deliveryMethod: order.deliveryMethod === DeliveryMethod.PICKUP
         ? 'Magazindan olib ketish'
@@ -215,7 +261,9 @@ export class OrdersService {
       paymentStatus: order.payment?.status ?? PaymentStatus.PENDING,
       paymentMethod: order.payment?.method ?? null,
       soldAt: order.soldAt,
-      soldBy: order.soldBy
+      soldBy: order.soldBy,
+      returnedAt: order.returnedAt,
+      returnedBy: order.returnedBy
     };
   }
 

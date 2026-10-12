@@ -1,5 +1,7 @@
 'use client';
 
+export { default } from './dashboard-view';
+
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -25,7 +27,7 @@ import { api, isDemoMode, type Product } from '@/lib/api';
 import { demoProducts } from '@/lib/demo-catalog';
 import { formatPrice } from '@/lib/utils';
 
-export default function AdminPage() {
+function LegacyAdminPage() {
   const [orders, setOrders] = useState<AdminOrder[]>(isDemoMode ? demoAdminOrders : []);
   const [products, setProducts] = useState<Product[]>(isDemoMode ? demoProducts : []);
 

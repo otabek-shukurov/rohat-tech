@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { OrderStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { CurrentUser } from '../security/current-user.decorator';
 import { JwtAuthGuard } from '../security/auth.guard';
 import { Roles, RolesGuard } from '../security/roles.guard';
+import { DashboardService } from './dashboard.service';
 import { OrdersService } from './orders.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -12,34 +13,13 @@ import { OrdersService } from './orders.service';
 export class AdminController {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly ordersService: OrdersService
+    private readonly ordersService: OrdersService,
+    private readonly dashboardService: DashboardService
   ) {}
 
   @Get('dashboard')
-  async dashboard() {
-    const [orders, products, customers, revenue] = await Promise.all([
-      this.prisma.order.count(),
-      this.prisma.product.count(),
-      this.prisma.user.count({ where: { role: 'CUSTOMER' } }),
-      this.prisma.order.aggregate({
-        where: { soldAt: { not: null } },
-        _sum: { total: true }
-      })
-    ]);
-    const latestOrders = await this.prisma.order.findMany({
-      take: 6,
-      include: { user: { select: { name: true, phone: true } }, items: true, payment: true },
-      orderBy: { createdAt: 'desc' }
-    });
-    return {
-      stats: {
-        orders,
-        products,
-        customers,
-        revenue: Number(revenue._sum.total ?? 0)
-      },
-      latestOrders
-    };
+  dashboard(@Query('period') period?: string) {
+    return this.dashboardService.getDashboard(period);
   }
 
   @Get('products')
@@ -131,6 +111,14 @@ export class AdminController {
     return this.ordersService.markSold(id, user.id, body.method ?? 'cash');
   }
 
+  @Post('orders/:id/mark-returned')
+  markOrderReturned(
+    @CurrentUser() user: { id: string },
+    @Param('id') id: string
+  ) {
+    return this.ordersService.markReturned(id, user.id);
+  }
+
   @Get('customers')
   customers() {
     return this.prisma.user.findMany({
@@ -170,20 +158,26 @@ export class AdminController {
 
   @Get('reports')
   async reports() {
-    const [byStatus, sales] = await Promise.all([
+    const [byStatus, sales, returns] = await Promise.all([
       this.prisma.order.groupBy({
         by: ['status'],
         _count: { id: true }
       }),
       this.prisma.order.aggregate({
-        where: { soldAt: { not: null } },
+        where: { soldAt: { not: null }, returnedAt: null },
+        _count: { id: true },
+        _sum: { total: true }
+      }),
+      this.prisma.order.aggregate({
+        where: { returnedAt: { not: null } },
         _count: { id: true },
         _sum: { total: true }
       })
     ]);
     return {
       byStatus,
-      sales: { count: sales._count.id, revenue: Number(sales._sum.total ?? 0) }
+      sales: { count: sales._count.id, revenue: Number(sales._sum.total ?? 0) },
+      returns: { count: returns._count.id, revenue: Number(returns._sum.total ?? 0) }
     };
   }
 
