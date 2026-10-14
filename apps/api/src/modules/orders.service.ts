@@ -89,7 +89,115 @@ export class OrdersService {
       });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 
-    await this.notifyTelegram(order, product.category.name).catch((error) => {
+    await this.notifyTelegram(order, { [product.id]: product.category.name }).catch((error) => {
+      console.error('Telegram notification failed:', error);
+    });
+
+    return {
+      orderNumber: order.orderNumber,
+      status: order.status,
+      message: 'Buyurtma qabul qilindi'
+    };
+  }
+
+  async createGuestCartOrder(input: {
+    items?: Array<{ productId?: string; quantity?: number }>;
+    fullName?: string;
+    phone?: string;
+    deliveryMethod?: string;
+    deliveryAddress?: string;
+    customerNote?: string;
+  }) {
+    const customerName = typeof input.fullName === 'string' ? input.fullName.trim().replace(/\s+/g, ' ') : '';
+    const customerPhone = this.normalizePhone(typeof input.phone === 'string' ? input.phone : '');
+    if (customerName.split(' ').filter(Boolean).length < 2) {
+      throw new BadRequestException('Ism va familiyani to‘liq kiriting');
+    }
+    if (!customerPhone) throw new BadRequestException('Telefon raqamini to‘liq kiriting');
+    if (!Array.isArray(input.items) || !input.items.length) throw new BadRequestException('Savat bo‘sh');
+    if (input.items.length > 30) throw new BadRequestException('Savatda mahsulotlar soni juda ko‘p');
+
+    const requestedItems = new Map<string, number>();
+    for (const item of input.items) {
+      const productId = typeof item?.productId === 'string' ? item.productId.trim() : '';
+      const quantity = Number(item?.quantity);
+      if (!productId || !Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
+        throw new BadRequestException('Savatdagi mahsulot soni noto‘g‘ri');
+      }
+      const totalQuantity = (requestedItems.get(productId) ?? 0) + quantity;
+      if (totalQuantity > 99) throw new BadRequestException('Bitta mahsulotdan ko‘pi bilan 99 dona buyurtma qilish mumkin');
+      requestedItems.set(productId, totalQuantity);
+    }
+
+    const products = await this.prisma.product.findMany({
+      where: { id: { in: [...requestedItems.keys()] }, isActive: true },
+      include: { category: true }
+    });
+    if (products.length !== requestedItems.size) {
+      throw new NotFoundException('Savatdagi ayrim mahsulotlar topilmadi');
+    }
+
+    for (const product of products) {
+      const quantity = requestedItems.get(product.id) ?? 0;
+      if (product.stock < quantity) {
+        throw new ConflictException(`${product.name}: omborda faqat ${product.stock} dona mavjud`);
+      }
+    }
+
+    const deliveryMethod = input.deliveryMethod === DeliveryMethod.PICKUP
+      ? DeliveryMethod.PICKUP
+      : DeliveryMethod.DELIVERY;
+    const deliveryAddress = typeof input.deliveryAddress === 'string' ? input.deliveryAddress.trim().slice(0, 300) || null : null;
+    if (deliveryMethod === DeliveryMethod.DELIVERY && (!deliveryAddress || deliveryAddress.length < 5)) {
+      throw new BadRequestException('Yetkazib berish manzilini to‘liq kiriting');
+    }
+    const customerNote = typeof input.customerNote === 'string' ? input.customerNote.trim().slice(0, 500) || null : null;
+    const subtotal = products.reduce((sum, product) => {
+      const price = product.discountPrice ?? product.price;
+      return sum.plus(price.mul(requestedItems.get(product.id) ?? 0));
+    }, new Prisma.Decimal(0));
+
+    const order = await this.prisma.$transaction(async (tx) => {
+      const orderNumber = await this.nextOrderNumber(tx);
+      return tx.order.create({
+        data: {
+          orderNumber,
+          customerName,
+          customerPhone,
+          status: OrderStatus.PENDING,
+          deliveryMethod,
+          deliveryAddress,
+          customerNote,
+          subtotal,
+          deliveryFee: new Prisma.Decimal(0),
+          total: subtotal,
+          items: {
+            create: products.map((product) => {
+              const quantity = requestedItems.get(product.id) ?? 0;
+              const unitPrice = product.discountPrice ?? product.price;
+              return {
+                productId: product.id,
+                productName: product.name,
+                unitPrice,
+                quantity,
+                total: unitPrice.mul(quantity)
+              };
+            })
+          },
+          payment: {
+            create: {
+              method: 'cash',
+              status: PaymentStatus.PENDING,
+              amount: subtotal
+            }
+          }
+        },
+        include: orderInclude
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+    const categories = Object.fromEntries(products.map((product) => [product.id, product.category.name]));
+    await this.notifyTelegram(order, categories).catch((error) => {
       console.error('Telegram notification failed:', error);
     });
 
@@ -274,26 +382,34 @@ export class OrdersService {
     return `+998 ${normalized.slice(3, 5)} ${normalized.slice(5, 8)} ${normalized.slice(8, 10)} ${normalized.slice(10, 12)}`;
   }
 
-  private async notifyTelegram(order: OrderWithDetails, category: string) {
+  private async notifyTelegram(order: OrderWithDetails, categories: Record<string, string>) {
     const token = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
     if (!token || !chatId) return;
 
-    const item = order.items[0];
     const createdAt = new Intl.DateTimeFormat('uz-UZ', {
       timeZone: 'Asia/Tashkent',
       dateStyle: 'medium',
       timeStyle: 'short'
     }).format(order.createdAt);
+    const productLines = order.items.flatMap((item, index) => [
+      `<b>${index + 1}. ${this.escapeHtml(item.productName)}</b>`,
+      `   Turi: ${this.escapeHtml(categories[item.productId] ?? 'Mahsulot')}`,
+      `   Soni: ${item.quantity} dona`,
+      `   Summa: ${Number(item.total).toLocaleString('uz-UZ')} so‘m`
+    ]);
     const text = [
       '<b>Yangi buyurtma</b>',
       '',
       `<b>Buyurtma:</b> ${this.escapeHtml(order.orderNumber)}`,
       `<b>Ism-familiya:</b> ${this.escapeHtml(order.customerName)}`,
       `<b>Telefon:</b> ${this.escapeHtml(order.customerPhone)}`,
-      `<b>Mahsulot turi:</b> ${this.escapeHtml(category)}`,
-      `<b>Mahsulot:</b> ${this.escapeHtml(item.productName)}`,
-      `<b>Soni:</b> ${item.quantity} dona`,
+      `<b>Qabul qilish:</b> ${order.deliveryMethod === DeliveryMethod.PICKUP ? 'Magazindan olib ketish' : 'Yetkazib berish'}`,
+      ...(order.deliveryAddress ? [`<b>Manzil:</b> ${this.escapeHtml(order.deliveryAddress)}`] : []),
+      ...(order.customerNote ? [`<b>Izoh:</b> ${this.escapeHtml(order.customerNote)}`] : []),
+      '',
+      ...productLines,
+      '',
       `<b>Jami:</b> ${Number(order.total).toLocaleString('uz-UZ')} so‘m`,
       `<b>Vaqti:</b> ${this.escapeHtml(createdAt)}`,
       '',

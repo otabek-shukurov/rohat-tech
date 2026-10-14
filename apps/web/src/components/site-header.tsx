@@ -14,6 +14,7 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CART_CHANGE_EVENT, getCartCount } from '@/lib/cart';
 
 const navItems = [
   { label: 'Bosh sahifa', href: '/' },
@@ -33,8 +34,20 @@ export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [discountCatalog, setDiscountCatalog] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => setMenuOpen(false), [pathname]);
+
+  useEffect(() => {
+    const refreshCartCount = () => setCartCount(getCartCount());
+    refreshCartCount();
+    window.addEventListener(CART_CHANGE_EVENT, refreshCartCount);
+    window.addEventListener('storage', refreshCartCount);
+    return () => {
+      window.removeEventListener(CART_CHANGE_EVENT, refreshCartCount);
+      window.removeEventListener('storage', refreshCartCount);
+    };
+  }, []);
 
   useEffect(() => {
     const updateLocation = () => setDiscountCatalog(pathname === '/catalog' && new URLSearchParams(window.location.search).get('discount') === 'true');
@@ -104,7 +117,7 @@ export function SiteHeader() {
 
           <div className="ml-auto flex items-center gap-1">
             <Link href="/favorites" className={cn('hidden h-10 w-10 place-items-center rounded-md transition md:grid', transparent ? 'text-white hover:bg-white/15' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950')} aria-label="Sevimlilar" title="Sevimlilar"><Heart className="h-5 w-5" /></Link>
-            <Link href="/cart" className={cn('relative grid h-10 w-10 place-items-center rounded-md transition', transparent ? 'text-white hover:bg-white/15' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950')} aria-label="Savat" title="Savat"><ShoppingCart className="h-5 w-5" /></Link>
+            <Link href="/cart" className={cn('relative grid h-10 w-10 place-items-center rounded-md transition', transparent ? 'text-white hover:bg-white/15' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950')} aria-label={`Savat, ${cartCount} ta mahsulot`} title="Savat"><ShoppingCart className="h-5 w-5" />{cartCount ? <span className="absolute right-0 top-0 grid min-h-4 min-w-4 place-items-center rounded-full bg-blue-600 px-1 text-[9px] font-bold leading-4 text-white ring-2 ring-white">{cartCount > 99 ? '99+' : cartCount}</span> : null}</Link>
             <button type="button" onClick={() => setMenuOpen((open) => !open)} className={cn('grid h-10 w-10 place-items-center rounded-md transition md:hidden', transparent ? 'text-white hover:bg-white/15' : 'text-slate-700 hover:bg-slate-100')} aria-label="Menyuni ochish" aria-expanded={menuOpen}>{menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
           </div>
         </div>
@@ -134,8 +147,8 @@ export function SiteHeader() {
           {mobileItems.map(({ label, href, icon: Icon }) => {
             const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
             return (
-              <Link key={href} href={href} className={cn('flex min-w-0 flex-col items-center gap-1 rounded-md py-1 text-[10px] font-medium transition-colors', active ? 'text-blue-700' : 'text-slate-500')}>
-                <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 1.8} />
+              <Link key={href} href={href} className={cn('relative flex min-w-0 flex-col items-center gap-1 rounded-md py-1 text-[10px] font-medium transition-colors', active ? 'text-blue-700' : 'text-slate-500')}>
+                <span className="relative"><Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 1.8} />{href === '/cart' && cartCount ? <span className="absolute -right-2 -top-1.5 grid min-h-4 min-w-4 place-items-center rounded-full bg-blue-600 px-1 text-[9px] font-bold leading-4 text-white">{cartCount > 99 ? '99+' : cartCount}</span> : null}</span>
                 <span className="truncate">{label}</span>
               </Link>
             );

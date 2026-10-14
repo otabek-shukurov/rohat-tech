@@ -8,6 +8,7 @@ import { ProductImage } from '@/components/product-image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Product, api, isDemoMode } from '@/lib/api';
+import { addCartItem } from '@/lib/cart';
 import { cn, formatPrice } from '@/lib/utils';
 
 export function ProductCard({ product }: { product: Product }) {
@@ -19,25 +20,12 @@ export function ProductCard({ product }: { product: Product }) {
   const [favorite, setFavorite] = useState(false);
   const [orderOpen, setOrderOpen] = useState(false);
 
-  async function addToCart() {
-    if (isDemoMode) {
-      setAdded(true);
-      window.setTimeout(() => setAdded(false), 1600);
-      return;
-    }
-
+  function addToCart() {
     setAdding(true);
-    try {
-      await api('/cart/items', {
-        method: 'POST',
-        body: JSON.stringify({ productId: product.id, quantity: 1 })
-      });
-      setAdded(true);
-    } catch {
-      setAdded(false);
-    } finally {
-      setAdding(false);
-    }
+    addCartItem(product);
+    setAdded(true);
+    setAdding(false);
+    window.setTimeout(() => setAdded(false), 1600);
   }
 
   async function addFavorite() {

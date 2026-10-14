@@ -9,4 +9,16 @@ export class GuestOrdersController {
   create(@Body() body: { productId?: string; quantity?: number; fullName?: string; phone?: string }) {
     return this.orders.createGuestOrder(body);
   }
+
+  @Post('guest/cart')
+  createCartOrder(@Body() body: {
+    items?: Array<{ productId?: string; quantity?: number }>;
+    fullName?: string;
+    phone?: string;
+    deliveryMethod?: string;
+    deliveryAddress?: string;
+    customerNote?: string;
+  }) {
+    return this.orders.createGuestCartOrder(body);
+  }
 }

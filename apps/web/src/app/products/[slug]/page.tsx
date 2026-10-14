@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { QuickOrderDialog } from '@/components/quick-order-dialog';
 import { ProductImage } from '@/components/product-image';
 import { Product, api, isDemoMode } from '@/lib/api';
+import { addCartItem } from '@/lib/cart';
 import { findDemoProduct } from '@/lib/demo-catalog';
 import { formatPrice } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -35,22 +36,13 @@ export default function ProductPage() {
     api<Product>(`/products/${slug}`).then(setProduct).catch(() => setProduct(findDemoProduct(slug))).finally(() => setLoading(false));
   }, [slug]);
 
-  async function addToCart() {
+  function addToCart() {
     if (!product) return;
-    if (isDemoMode) {
-      setAdded(true);
-      window.setTimeout(() => setAdded(false), 1600);
-      return;
-    }
-
     setAdding(true);
-    try {
-      await api('/cart/items', { method: 'POST', body: JSON.stringify({ productId: product.id, quantity: 1 }) });
-      setAdded(true);
-    } catch {
-      setAdded(false);
-    }
-    finally { setAdding(false); }
+    addCartItem(product);
+    setAdded(true);
+    setAdding(false);
+    window.setTimeout(() => setAdded(false), 1600);
   }
 
   async function toggleFavorite() {
