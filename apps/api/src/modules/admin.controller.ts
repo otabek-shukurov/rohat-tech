@@ -33,6 +33,14 @@ export class AdminController {
     });
   }
 
+  @Get('products/:id')
+  product(@Param('id') id: string) {
+    return this.prisma.product.findUniqueOrThrow({
+      where: { id },
+      include: { category: true, brand: true, images: true }
+    });
+  }
+
   @Post('products')
   createProduct(@Body() body: ProductBody) {
     this.validateProductBody(body, false);
@@ -245,7 +253,7 @@ export class AdminController {
     }
 
     if (!partial && !body.imageUrl) throw new BadRequestException('Mahsulot rasmi kiritilishi kerak');
-    if (body.imageUrl) {
+    if (body.imageUrl && !body.imageUrl.startsWith('/images/')) {
       let imageUrl: URL;
       try {
         imageUrl = new URL(body.imageUrl);

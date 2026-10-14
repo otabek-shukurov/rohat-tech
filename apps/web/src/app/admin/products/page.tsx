@@ -1,8 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Boxes, Edit3, Loader2, PackagePlus, Search, Trash2 } from 'lucide-react';
-import { ProductFormDialog } from '@/components/admin/product-form-dialog';
 import { ProductImage } from '@/components/product-image';
 import { Button } from '@/components/ui/button';
 import { Product, api, isDemoMode } from '@/lib/api';
@@ -11,8 +11,6 @@ import { cn, formatPrice } from '@/lib/utils';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>(isDemoMode ? demoProducts : []);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(!isDemoMode);
   const [error, setError] = useState('');
@@ -37,18 +35,6 @@ export default function AdminProductsPage() {
     return products.filter((product) => !value || [product.name, product.category.name, product.brand.name, product.slug].join(' ').toLocaleLowerCase('uz').includes(value));
   }, [products, query]);
 
-  function openCreate() {
-    setSelectedProduct(null);
-    setError('');
-    setFormOpen(true);
-  }
-
-  function openEdit(product: Product) {
-    setSelectedProduct(product);
-    setError('');
-    setFormOpen(true);
-  }
-
   async function deactivate(product: Product) {
     if (isDemoMode || !window.confirm(`${product.name} katalogdan yashirilsinmi? Oldingi buyurtmalar saqlanadi.`)) return;
     try {
@@ -70,7 +56,7 @@ export default function AdminProductsPage() {
           <h1 className="mt-1 text-2xl font-bold text-slate-950 md:text-3xl">Mahsulotlar</h1>
           <p className="mt-1 text-sm text-slate-500">Narx, qoldiq va katalogdagi ko‘rinishni boshqaring.</p>
         </div>
-        <Button onClick={openCreate}><PackagePlus className="h-4 w-4" />Mahsulot qo‘shish</Button>
+        <Button asChild><Link href="/admin/products/new"><PackagePlus className="h-4 w-4" />Mahsulot qo‘shish</Link></Button>
       </div>
 
       <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-3">
@@ -83,7 +69,7 @@ export default function AdminProductsPage() {
         <div className="border-b border-slate-200 p-4">
           <label className="relative block max-w-xl"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Mahsulot, kategoriya yoki brend..." className="h-11 w-full rounded-md border border-slate-300 pl-10 pr-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></label>
         </div>
-        {error && !formOpen ? <p className="border-b border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
+        {error ? <p className="border-b border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
         {loading ? (
           <div className="grid min-h-64 place-items-center text-blue-700"><Loader2 className="h-6 w-6 animate-spin" /></div>
         ) : filtered.length ? (
@@ -99,7 +85,7 @@ export default function AdminProductsPage() {
                     <div className="mt-2 flex flex-wrap items-center gap-3"><strong className="text-sm text-blue-700">{formatPrice(Number(product.discountPrice ?? product.price))}</strong>{product.discountPrice ? <span className="text-xs text-slate-400 line-through">{formatPrice(Number(product.price))}</span> : null}<span className={cn('rounded px-2 py-1 text-xs font-bold', product.stock <= 5 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700')}>{product.stock} dona</span></div>
                   </div>
                   <div className="flex items-center gap-2 sm:justify-end">
-                    <button type="button" onClick={() => openEdit(product)} title="Tahrirlash" aria-label={`${product.name}ni tahrirlash`} className="grid h-10 w-10 place-items-center rounded-md border border-slate-200 text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"><Edit3 className="h-4 w-4" /></button>
+                    <Link href={`/admin/products/${product.id}/edit`} title="Tahrirlash" aria-label={`${product.name}ni tahrirlash`} className="grid h-10 w-10 place-items-center rounded-md border border-slate-200 text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"><Edit3 className="h-4 w-4" /></Link>
                     <button type="button" onClick={() => deactivate(product)} disabled={product.isActive === false || isDemoMode} title="Katalogdan yashirish" aria-label={`${product.name}ni katalogdan yashirish`} className="grid h-10 w-10 place-items-center rounded-md border border-slate-200 text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-35"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </article>
@@ -110,8 +96,6 @@ export default function AdminProductsPage() {
           <div className="flex min-h-64 flex-col items-center justify-center text-center"><Boxes className="h-8 w-8 text-slate-300" /><p className="mt-3 text-sm font-bold text-slate-800">Mahsulot topilmadi</p></div>
         )}
       </section>
-
-      <ProductFormDialog open={formOpen} product={selectedProduct} onClose={() => setFormOpen(false)} onSaved={async () => { await load(); }} />
     </div>
   );
 }

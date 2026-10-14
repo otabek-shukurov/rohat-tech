@@ -98,7 +98,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
     };
   }, [menuOpen]);
 
-  const pageName = pageNames[pathname] ?? 'Boshqaruv paneli';
+  const pageName = pathname === '/admin/products/new'
+    ? 'Yangi mahsulot'
+    : pathname.startsWith('/admin/products/') && pathname.endsWith('/edit')
+      ? 'Mahsulotni tahrirlash'
+      : pageNames[pathname] ?? 'Boshqaruv paneli';
 
   if (pathname === '/admin/login') return <>{children}</>;
   if (!authReady) return <div className="grid min-h-screen place-items-center bg-slate-50 text-blue-700"><Loader2 className="h-7 w-7 animate-spin" /></div>;

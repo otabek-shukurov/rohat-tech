@@ -10,8 +10,7 @@ import {
   PackagePlus,
   Plus,
   Trash2,
-  UploadCloud,
-  X
+  UploadCloud
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,17 +43,16 @@ type Draft = {
   specs: SpecRow[];
 };
 
-type ProductFormDialogProps = {
-  open: boolean;
+type ProductFormProps = {
   product?: Product | null;
-  onClose: () => void;
+  onCancel: () => void;
   onSaved?: (product: Product) => void | Promise<void>;
 };
 
 const inputClass = 'h-11 w-full rounded-md border border-slate-300 bg-white px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100';
 const knownSpecKeys = ['kafolat', 'model', 'rang', 'ishlab chiqarilgan davlat', 'o‘lchov birligi'];
 
-export function ProductFormDialog({ open, product, onClose, onSaved }: ProductFormDialogProps) {
+export function ProductForm({ product, onCancel, onSaved }: ProductFormProps) {
   const [draft, setDraft] = useState<Draft>(() => productToDraft(product));
   const [meta, setMeta] = useState<Meta>({ categories: [], brands: [] });
   const [metaLoading, setMetaLoading] = useState(true);
@@ -69,7 +67,6 @@ export function ProductFormDialog({ open, product, onClose, onSaved }: ProductFo
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!open) return;
     setDraft(productToDraft(product));
     setImageFile(null);
     setPreviewUrl(product?.images[0]?.url ?? '');
@@ -80,10 +77,9 @@ export function ProductFormDialog({ open, product, onClose, onSaved }: ProductFo
     setSuccess(false);
     setError('');
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [open, product]);
+  }, [product]);
 
   useEffect(() => {
-    if (!open) return;
     if (isDemoMode) {
       setMeta({
         categories: uniqueOptions(demoProducts.map((item) => item.category)),
@@ -99,16 +95,7 @@ export function ProductFormDialog({ open, product, onClose, onSaved }: ProductFo
       .catch((reason) => active && setError(reason instanceof Error ? reason.message : 'Kategoriya va brendlarni yuklab bo‘lmadi'))
       .finally(() => active && setMetaLoading(false));
     return () => { active = false; };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = previous; };
-  }, [open]);
-
-  if (!open) return null;
+  }, []);
 
   function setField<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -167,11 +154,9 @@ export function ProductFormDialog({ open, product, onClose, onSaved }: ProductFo
       return setError('Chegirma narxi asosiy narxdan kichik va 0 dan katta bo‘lishi kerak.');
     }
     if (!Number.isInteger(stock) || stock < 0) return setError('Ombordagi son 0 yoki undan katta butun son bo‘lishi kerak.');
-    if (!imageFile && !draft.imageUrl.trim()) return setError('Mahsulot rasmini yuklang yoki rasm URL kiriting.');
-
     setSaving(true);
     try {
-      let imageUrl = draft.imageUrl.trim();
+      let imageUrl = draft.imageUrl.trim() || product?.images[0]?.url || '/images/rohat-tech-hero.png';
       if (imageFile) {
         const formData = new FormData();
         formData.append('file', imageFile);
@@ -203,7 +188,6 @@ export function ProductFormDialog({ open, product, onClose, onSaved }: ProductFo
       });
       setSuccess(true);
       await onSaved?.(saved);
-      window.setTimeout(onClose, 450);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Mahsulotni saqlab bo‘lmadi');
     } finally {
@@ -214,19 +198,17 @@ export function ProductFormDialog({ open, product, onClose, onSaved }: ProductFo
   const effectivePrice = Number(draft.discountPrice || draft.price || 0);
 
   return (
-    <div className="fixed inset-0 z-[100] flex justify-end" role="dialog" aria-modal="true" aria-labelledby="product-form-title">
-      <button type="button" className="absolute inset-0 bg-slate-950/50 backdrop-blur-[2px]" aria-label="Formani yopish" onClick={() => !saving && onClose()} />
-      <aside className="relative h-full w-full overflow-y-auto bg-white shadow-2xl md:max-w-3xl">
-        <header className="sticky top-0 z-20 flex items-start justify-between gap-4 border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur-xl md:px-7">
+    <div className="mx-auto max-w-[1180px] px-4 py-6 md:px-6 lg:px-8 lg:py-8">
+        <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold text-blue-700">{product ? 'Mahsulotni tahrirlash' : 'Yangi mahsulot'}</p>
-            <h2 id="product-form-title" className="mt-1 text-xl font-bold text-slate-950">{product ? product.name : 'Katalogga mahsulot qo‘shish'}</h2>
-            <p className="mt-1 text-xs text-slate-500">Majburiy maydonlarni to‘ldiring va rasmni tekshirib saqlang.</p>
+            <h1 className="mt-1 text-2xl font-bold text-slate-950 md:text-3xl">{product ? product.name : 'Katalogga mahsulot qo‘shish'}</h1>
+            <p className="mt-2 text-sm text-slate-500">Majburiy maydonlarni to‘ldiring, narx va rasmni tekshirib saqlang.</p>
           </div>
-          <button type="button" onClick={onClose} disabled={saving} className="grid h-10 w-10 shrink-0 place-items-center rounded-md text-slate-500 transition hover:bg-slate-100 disabled:opacity-40" aria-label="Yopish"><X className="h-5 w-5" /></button>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>Mahsulotlarga qaytish</Button>
         </header>
 
-        <form onSubmit={save} className="space-y-8 px-5 py-6 md:px-7">
+        <form onSubmit={save} className="mt-6 space-y-8 rounded-lg border border-slate-200 bg-white px-5 py-6 shadow-sm md:px-8 md:py-8">
           <FormSection title="Asosiy ma’lumotlar" description="Katalogda mijoz birinchi ko‘radigan ma’lumotlar.">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Mahsulot nomi" required><Input required value={draft.name} onChange={(event) => { const name = event.target.value; setDraft((current) => ({ ...current, name, slug: slugTouched ? current.slug : toSlug(name) })); }} placeholder="Masalan, Bosch Serie 6" /></Field>
@@ -241,14 +223,14 @@ export function ProductFormDialog({ open, product, onClose, onSaved }: ProductFo
 
           <FormSection title="Narx va ombor" description="Chegirma narxi bo‘lsa, u asosiy narxdan kichik bo‘lishi kerak.">
             <div className="grid gap-4 sm:grid-cols-3">
-              <Field label="Asosiy narx" required><Input required min="1" step="1000" type="number" value={draft.price} onChange={(event) => setField('price', event.target.value)} placeholder="5 990 000" /></Field>
-              <Field label="Chegirma narxi"><Input min="1" step="1000" type="number" value={draft.discountPrice} onChange={(event) => setField('discountPrice', event.target.value)} placeholder="Ixtiyoriy" /></Field>
+              <Field label="Asosiy narx" required><MoneyInput required value={draft.price} onChange={(value) => setField('price', value)} placeholder="5 000 000" /></Field>
+              <Field label="Chegirma narxi"><MoneyInput value={draft.discountPrice} onChange={(value) => setField('discountPrice', value)} placeholder="Ixtiyoriy" /></Field>
               <Field label="Ombordagi son" required><Input required min="0" step="1" type="number" value={draft.stock} onChange={(event) => setField('stock', event.target.value)} /></Field>
             </div>
             {effectivePrice > 0 ? <div className="flex items-center justify-between rounded-md bg-slate-50 px-4 py-3 text-sm"><span className="font-medium text-slate-500">Katalogdagi narx</span><strong className="text-blue-700">{formatPrice(effectivePrice)}</strong></div> : null}
           </FormSection>
 
-          <FormSection title="Mahsulot rasmi" description="Oq yoki neytral fondagi, kamida 1200×1200 px rasm tavsiya qilinadi.">
+          <FormSection title="Mahsulot rasmi" description="Oq yoki neytral fondagi, kamida 1200×1200 px rasm tavsiya qilinadi. Rasm tanlanmasa standart rasm ishlatiladi.">
             <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(event) => selectImage(event.target.files?.[0])} />
             <div className="grid gap-4 sm:grid-cols-[220px_minmax(0,1fr)]">
               <div className="relative aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
@@ -272,7 +254,7 @@ export function ProductFormDialog({ open, product, onClose, onSaved }: ProductFo
               <Field label="O‘lchov birligi"><select value={draft.unit} onChange={(event) => setField('unit', event.target.value)} className={inputClass}><option value="dona">Dona</option><option value="to‘plam">To‘plam</option><option value="juft">Juft</option></select></Field>
             </div>
             <div className="space-y-3 border-t border-slate-200 pt-5">
-              <div className="flex items-center justify-between gap-3"><div><h4 className="text-sm font-bold text-slate-900">Qo‘shimcha xususiyatlar</h4><p className="mt-0.5 text-xs text-slate-500">Masalan: Quvvati — 2000 W</p></div><Button type="button" size="sm" variant="outline" onClick={addSpec}><Plus className="h-4 w-4" />Qator</Button></div>
+              <div className="flex items-center justify-between gap-3"><div><h3 className="text-sm font-bold text-slate-900">Qo‘shimcha xususiyatlar</h3><p className="mt-0.5 text-xs text-slate-500">Masalan: Quvvati — 2000 W</p></div><Button type="button" size="sm" variant="outline" onClick={addSpec}><Plus className="h-4 w-4" />Qator</Button></div>
               {draft.specs.map((row) => <div key={row.id} className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_40px] gap-2"><Input aria-label="Xususiyat nomi" value={row.key} onChange={(event) => updateSpec(row.id, 'key', event.target.value)} placeholder="Xususiyat" /><Input aria-label="Xususiyat qiymati" value={row.value} onChange={(event) => updateSpec(row.id, 'value', event.target.value)} placeholder="Qiymati" /><button type="button" onClick={() => removeSpec(row.id)} aria-label="Xususiyatni o‘chirish" className="grid h-11 w-10 place-items-center rounded-md text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4" /></button></div>)}
               {!draft.specs.length ? <p className="rounded-md bg-slate-50 px-4 py-3 text-xs text-slate-500">Qo‘shimcha xususiyat kiritilmagan.</p> : null}
             </div>
@@ -282,22 +264,39 @@ export function ProductFormDialog({ open, product, onClose, onSaved }: ProductFo
           {error ? <Notice tone="error">{error}</Notice> : null}
           {success ? <Notice tone="success">Mahsulot muvaffaqiyatli saqlandi.</Notice> : null}
 
-          <footer className="sticky bottom-0 -mx-5 flex items-center justify-end gap-3 border-t border-slate-200 bg-white/95 px-5 py-4 backdrop-blur md:-mx-7 md:px-7">
-            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Bekor qilish</Button>
+          <footer className="sticky bottom-0 z-10 -mx-5 flex items-center justify-end gap-3 border-t border-slate-200 bg-white/95 px-5 py-4 backdrop-blur md:-mx-8 md:px-8">
+            <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>Bekor qilish</Button>
             <Button disabled={saving || isDemoMode || metaLoading}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <PackagePlus className="h-4 w-4" />}{saving ? (imageFile ? 'Rasm va mahsulot saqlanmoqda...' : 'Saqlanmoqda...') : product ? 'O‘zgarishlarni saqlash' : 'Mahsulot qo‘shish'}</Button>
           </footer>
         </form>
-      </aside>
     </div>
   );
 }
 
 function FormSection({ title, description, children }: { title: string; description: string; children: ReactNode }) {
-  return <section className="space-y-5 border-b border-slate-200 pb-8 last:border-0"><div><h3 className="text-base font-bold text-slate-950">{title}</h3><p className="mt-1 text-xs leading-5 text-slate-500">{description}</p></div>{children}</section>;
+  return <section className="space-y-5 border-b border-slate-200 pb-8 last:border-0"><div><h2 className="text-base font-bold text-slate-950">{title}</h2><p className="mt-1 text-xs leading-5 text-slate-500">{description}</p></div>{children}</section>;
 }
 
 function Field({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: ReactNode }) {
   return <label className="block"><span className="mb-2 flex items-center gap-1 text-sm font-semibold text-slate-700">{label}{required ? <span className="text-rose-600">*</span> : null}</span>{children}{hint ? <span className="mt-1.5 block text-[11px] text-slate-500">{hint}</span> : null}</label>;
+}
+
+function MoneyInput({ value, onChange, placeholder, required = false }: { value: string; onChange: (value: string) => void; placeholder: string; required?: boolean }) {
+  return (
+    <span className="relative block">
+      <Input
+        required={required}
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        value={formatMoneyInput(value)}
+        onChange={(event) => onChange(parseMoneyInput(event.target.value))}
+        placeholder={placeholder}
+        className="pr-14 tabular-nums"
+      />
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">so‘m</span>
+    </span>
+  );
 }
 
 function Notice({ tone, children }: { tone: 'error' | 'warning' | 'success'; children: ReactNode }) {
@@ -336,6 +335,15 @@ function createRowId() {
 
 function uniqueOptions(items: Array<{ id: string; name: string }>) {
   return Array.from(new Map(items.map((item) => [item.id, { id: item.id, name: item.name }])).values());
+}
+
+function parseMoneyInput(value: string) {
+  return value.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 15);
+}
+
+function formatMoneyInput(value: string) {
+  const digits = parseMoneyInput(value);
+  return digits ? digits.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '';
 }
 
 function toSlug(value: string) {

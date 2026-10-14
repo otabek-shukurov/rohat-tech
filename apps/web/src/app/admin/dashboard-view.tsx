@@ -17,7 +17,6 @@ import {
   Users
 } from 'lucide-react';
 import { OrderStatusBadge } from '@/components/admin/order-status-badge';
-import { ProductFormDialog } from '@/components/admin/product-form-dialog';
 import { Button } from '@/components/ui/button';
 import { type AdminOrder, demoAdminOrders } from '@/lib/admin-demo';
 import { api, isDemoMode } from '@/lib/api';
@@ -77,7 +76,6 @@ export default function DashboardView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [todayLabel, setTodayLabel] = useState('');
-  const [productFormOpen, setProductFormOpen] = useState(false);
 
   useEffect(() => {
     setTodayLabel(formatUzbekDate(new Date()));
@@ -130,7 +128,7 @@ export default function DashboardView() {
               <button key={item.value} type="button" role="tab" aria-selected={period === item.value} onClick={() => item.value !== period && setPeriod(item.value)} className={cn('min-h-9 shrink-0 rounded px-3 text-xs font-bold transition', period === item.value ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900')}>{item.label}</button>
             ))}
           </div>
-          <Button type="button" onClick={() => setProductFormOpen(true)}><PackagePlus className="h-4 w-4" />Mahsulot qo‘shish</Button>
+          <Button asChild><Link href="/admin/products/new"><PackagePlus className="h-4 w-4" />Mahsulot qo‘shish</Link></Button>
         </div>
       </div>
 
@@ -172,8 +170,6 @@ export default function DashboardView() {
         </>
       ) : null}
       </div>
-
-      <ProductFormDialog open={productFormOpen} onClose={() => setProductFormOpen(false)} onSaved={() => setReloadKey((key) => key + 1)} />
     </div>
   );
 }
