@@ -148,9 +148,6 @@ export class OrdersService {
       ? DeliveryMethod.PICKUP
       : DeliveryMethod.DELIVERY;
     const deliveryAddress = typeof input.deliveryAddress === 'string' ? input.deliveryAddress.trim().slice(0, 300) || null : null;
-    if (deliveryMethod === DeliveryMethod.DELIVERY && (!deliveryAddress || deliveryAddress.length < 5)) {
-      throw new BadRequestException('Yetkazib berish manzilini to‘liq kiriting');
-    }
     const customerNote = typeof input.customerNote === 'string' ? input.customerNote.trim().slice(0, 500) || null : null;
     const subtotal = products.reduce((sum, product) => {
       const price = product.discountPrice ?? product.price;

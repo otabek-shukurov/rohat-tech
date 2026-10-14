@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { CheckCircle2, MapPin, PackageCheck, Phone, Store, Truck, UserRound } from 'lucide-react';
+import { CheckCircle2, PackageCheck, Phone, Store, Truck, UserRound } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 import { EmptyState } from '@/components/empty-state';
 import { PageHeading } from '@/components/page-heading';
@@ -17,7 +17,6 @@ export default function CheckoutPage() {
   const [method, setMethod] = useState<'DELIVERY' | 'PICKUP'>('DELIVERY');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('+998 ');
-  const [address, setAddress] = useState('');
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -32,11 +31,10 @@ export default function CheckoutPage() {
   const itemCount = getCartCount(items);
   const nameComplete = fullName.trim().split(/\s+/).filter(Boolean).length >= 2;
   const phoneComplete = phone.replace(/\D/g, '').length === 12;
-  const addressComplete = method === 'PICKUP' || address.trim().length >= 5;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!items.length || !nameComplete || !phoneComplete || !addressComplete) return;
+    if (!items.length || !nameComplete || !phoneComplete) return;
     setSubmitting(true);
     setError('');
     try {
@@ -46,7 +44,6 @@ export default function CheckoutPage() {
           fullName: fullName.trim(),
           phone,
           deliveryMethod: method,
-          deliveryAddress: method === 'DELIVERY' ? address.trim() : undefined,
           customerNote: note.trim() || undefined,
           items: items.map((item) => ({ productId: item.product.id, quantity: item.quantity }))
         })
@@ -105,7 +102,7 @@ export default function CheckoutPage() {
                 <MethodButton active={method === 'PICKUP'} onClick={() => setMethod('PICKUP')} icon={Store} title="Magazindan olish" text="Tayyor bo‘lganda olib ketish" />
               </div>
               <div className="mt-5 space-y-4">
-                {method === 'DELIVERY' ? <label className="block"><span className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800"><MapPin className="h-4 w-4 text-blue-600" /> Yetkazib berish manzili</span><Input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Mahalla, ko‘cha, uy" required /></label> : null}
+                {method === 'DELIVERY' ? <p className="rounded-md bg-blue-50 px-3.5 py-3 text-sm leading-6 text-blue-800">Yetkazib berish manzili operator qo‘ng‘irog‘i vaqtida aniqlashtiriladi.</p> : null}
                 <label className="block"><span className="mb-2 block text-sm font-semibold text-slate-800">Buyurtmaga izoh <span className="font-normal text-slate-400">(ixtiyoriy)</span></span><textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={500} placeholder="Masalan: yetkazishdan oldin qo‘ng‘iroq qiling" className="w-full resize-none rounded-md border border-slate-300 bg-white px-3.5 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></label>
               </div>
             </div>
@@ -120,7 +117,7 @@ export default function CheckoutPage() {
             <div className="mt-4 flex items-end justify-between border-t border-slate-200 pt-4"><span className="font-semibold text-slate-950">Jami</span><span className="text-2xl font-bold text-slate-950">{formatPrice(subtotal)}</span></div>
             <div className="mt-5 flex items-start gap-3 rounded-md bg-emerald-50 p-3 text-sm text-emerald-800"><PackageCheck className="mt-0.5 h-5 w-5 shrink-0" /><span>To‘lov mahsulotni olganingizdan keyin amalga oshiriladi.</span></div>
             {error ? <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}
-            <Button type="submit" className="mt-5 w-full" disabled={submitting || !nameComplete || !phoneComplete || !addressComplete}>{submitting ? 'Yuborilmoqda...' : 'Buyurtmani tasdiqlash'}</Button>
+            <Button type="submit" className="mt-5 w-full" disabled={submitting || !nameComplete || !phoneComplete}>{submitting ? 'Yuborilmoqda...' : 'Buyurtmani tasdiqlash'}</Button>
           </aside>
         </form>
       )}
